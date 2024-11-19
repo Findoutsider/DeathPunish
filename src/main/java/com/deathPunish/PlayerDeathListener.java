@@ -4,6 +4,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class PlayerDeathListener implements Listener {
 
@@ -15,25 +16,35 @@ public class PlayerDeathListener implements Listener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        // è·å–ç©å®¶å¯¹è±¡
+         // »ñÈ¡Íæ¼Ò¶ÔÏó
         var player = event.getEntity();
+
+        // Çå³ıÍæ¼Ò±³°ü
+        player.getInventory().clear();
+
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        // »ñÈ¡Íæ¼Ò¶ÔÏó
+        var player = event.getPlayer();
         var playerName = player.getName();
 
-        // è·å–é…ç½®æ–‡ä»¶
+        // »ñÈ¡ÅäÖÃÎÄ¼ş
         FileConfiguration config = plugin.getConfig();
 
-        // è¯»å–å½“å‰ç©å®¶çš„æœ€å¤§ç”Ÿå‘½å€¼
+        // ¶ÁÈ¡µ±Ç°Íæ¼ÒµÄ×î´óÉúÃüÖµ
         double maxHealth = config.getDouble(playerName + ".maxHealth", 20.0);
 
-        // å‡å°‘æœ€å¤§ç”Ÿå‘½å€¼
-        double newMaxHealth = Math.max(maxHealth - 2.0, 1.0); // æœ€å°å€¼ä¸º1.0
+        // ¼õÉÙ×î´óÉúÃüÖµ
+        double newMaxHealth = Math.max(maxHealth - 2.0, 1.0); // ×îĞ¡ÖµÎª1.0
 
-        // æ›´æ–°é…ç½®æ–‡ä»¶
+        // ¸üĞÂÅäÖÃÎÄ¼ş
         config.set(playerName + ".maxHealth", newMaxHealth);
         plugin.saveConfig();
 
-        // è®¾ç½®ç©å®¶çš„æ–°æœ€å¤§ç”Ÿå‘½å€¼
+        // ÉèÖÃÍæ¼ÒµÄĞÂ×î´óÉúÃüÖµ
         player.setMaxHealth(newMaxHealth);
-        player.setHealth(newMaxHealth); // é‡ç½®å½“å‰ç”Ÿå‘½å€¼ä¸ºæ–°çš„æœ€å¤§å€¼
+        player.setHealth(newMaxHealth); // ÖØÖÃµ±Ç°ÉúÃüÖµÎªĞÂµÄ×î´óÖµ
     }
 }
