@@ -1,27 +1,83 @@
 package com.deathPunish;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.awt.*;
+import java.io.File;
+import java.util.Objects;
 
 public final class DeathPunish extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        say("[DeathPunish] æ’ä»¶å·²åŠ è½½");
-        // æ³¨å†Œäº‹ä»¶ç›‘å¬å™¨
+        say("[DeathPunish] ¡ìa²å¼şÒÑ¼ÓÔØ");
+         // Éú³ÉÅäÖÃÎÄ¼ş
+        saveDefaultConfig();
+        // ×¢²áÊÂ¼ş¼àÌıÆ÷
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        getServer().getPluginManager().registerEvents(new EatCustomItemListener(), this);
+        // ×¢²áÃüÁî
+        this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
+        this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
+
+        getServer().addRecipe(CustomItems.createEnchantedGoldenApple());
     }
 
     @Override
     public void onDisable() {
-        // æ’ä»¶ç¦ç”¨æ—¶çš„å¤„ç†
-        say("[DeathPunish] æ’ä»¶å·²å¸è½½");
+        // ²å¼ş½ûÓÃÊ±µÄ´¦Àí
+        say("[DeathPunish] ¡ìa²å¼şÒÑĞ¶ÔØ");
     }
 
     public void say(String s) {
         CommandSender sender = Bukkit.getConsoleSender();
         sender.sendMessage(s);
+    }
+
+    @Override
+    public void saveDefaultConfig() {
+        File configFile = new File(getDataFolder(), "config.yml");
+
+        // ¼ì²éÅäÖÃÎÄ¼şÊÇ·ñ´æÔÚ
+        if (!configFile.exists()) {
+            // ÅäÖÃÎÄ¼ş²»´æÔÚ£¬Ğ´ÈëÄ¬ÈÏÅäÖÃ
+            getConfig().options().copyDefaults(true);
+            saveConfig();
+        } else {
+            // ÅäÖÃÎÄ¼ş´æÔÚ£¬³¢ÊÔ¼ÓÔØÅäÖÃ
+            try {
+                FileConfiguration config = getConfig();
+                // ¼ì²éÅäÖÃÎÄ¼şÊÇ·ñÓĞĞ§
+                if (config.contains("version") && config.contains("punishOnDeath") && config.contains("defaultMaxHealth") 
+                        && config.contains("refillFoolLevelOnDeath") && config.contains("resetExpOnDeath") && config.contains("clearInventoryOnDeath")
+                        && config.contains("clearEnderchestOnDeath") && config.contains("banOnDeath") && config.contains("banReason")) {
+                    // ÅäÖÃÎÄ¼şÓĞĞ§£¬½ö¶ÁÈ¡
+                    return;
+                } else if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase("1.2.1")) {
+                    configFile.delete();
+                    getConfig().options().copyDefaults(true);
+                    saveConfig();
+                } else {
+                    // ÅäÖÃÎÄ¼şÎŞĞ§£¬É¾³ı¾ÉÎÄ¼ş²¢ÖØĞÂĞ´ÈëÄ¬ÈÏÅäÖÃ
+                    configFile.delete();
+                    getConfig().options().copyDefaults(true);
+                    saveConfig();
+                }
+            } catch (Exception e) {
+                // ÅäÖÃÎÄ¼ş¼ÓÔØÊ§°Ü£¬É¾³ı¾ÉÎÄ¼ş²¢ÖØĞÂĞ´ÈëÄ¬ÈÏÅäÖÃ
+                configFile.delete();
+                getConfig().options().copyDefaults(true);
+                saveConfig();
+            }
+        }
     }
 }
 

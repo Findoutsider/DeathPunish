@@ -1,2 +1,24 @@
+version: "1.2.1"
 # 默认最大生命值
-defaultMaxHealth: 20.0
+defaultMaxHealth: 20
+# 是否启用死亡惩罚
+punishOnDeath: true
+# 死亡时减少玩家生命上限
+reduceMaxHealthOnDeath: true
+# 死亡是否重置玩家饥饿值
+refillFoolLevelOnDeath: false
+# 死亡是否重置玩家经验值
+resetExpOnDeath: false
+# 死亡是否清除玩家背包
+clearInventoryOnDeath: true
+# 死亡是否清除玩家末影箱
+clearEnderchestOnDeath: true
+# 血量上限为1时死亡后是否封禁玩家
+banOnDeath: false
+
+banReason: "§4§l你已经不能再复活了！"
+
+deathRunCommand: false
+
+deathCommand:
+#  - "say  {player}死了！"
