@@ -1,4 +1,4 @@
-version: "1.2.1"
+version: "1.2.2"
 # 默认最大生命值
 defaultMaxHealth: 20
 # 是否启用死亡惩罚

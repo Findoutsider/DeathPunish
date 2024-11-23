@@ -61,7 +61,7 @@ public final class DeathPunish extends JavaPlugin {
                         && config.contains("clearEnderchestOnDeath") && config.contains("banOnDeath") && config.contains("banReason")) {
                     // 配置文件有效，仅读取
                     return;
-                } else if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase("1.2.1")) {
+                } else if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase("1.2.2")) {
                     configFile.delete();
                     getConfig().options().copyDefaults(true);
                     saveConfig();
