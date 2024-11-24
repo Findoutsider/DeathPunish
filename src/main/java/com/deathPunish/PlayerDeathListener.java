@@ -16,7 +16,7 @@ public class PlayerDeathListener implements Listener {
     public PlayerDeathListener(DeathPunish plugin) {
     }
 
-    private int foodLevel;
+    private int foodLevel = 20;
     private boolean isdeath = false;
 
     @EventHandler
@@ -44,8 +44,11 @@ public class PlayerDeathListener implements Listener {
             if (config.getBoolean("clearEnderchestOnDeath")) {
                 player.getEnderChest().clear();
             }
+
+            this.isdeath = true;
         }
     }
+
 
     @EventHandler(priority = EventPriority.LOW)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
@@ -81,13 +84,5 @@ public class PlayerDeathListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerPortal(PlayerPortalEvent event) {
-        var fromWorld = event.getFrom().getWorld();
-        var toWorld = event.getTo().getWorld();
 
-        if (fromWorld.getName().equals("the_end") && toWorld.getName().equals("world")) {
-            this.isdeath = true;
-        }
-    }
 }
