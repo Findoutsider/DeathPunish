@@ -1,6 +1,4 @@
-version: "1.2.2"
-# 默认最大生命值
-defaultMaxHealth: 20
+version: "1.3.1"
 # 是否启用死亡惩罚
 punishOnDeath: true
 # 死亡时减少玩家生命上限
@@ -18,7 +16,17 @@ banOnDeath: false
 
 banReason: "§4§l你已经不能再复活了！"
 
-deathRunCommand: false
+enableEpitaph: true
 
-deathCommand:
-#  - "say  {player}死了！"
+customItems:
+  heal_apple:
+    displayName: "§6生命果实"
+    lore:
+      - "§7食用后恢复生命上限，并获取一些额外效果"
+    shape1: "yxy"
+    shape2: "xbx"
+    shape3: "yxy"
+    ingredients:
+      x: "GOLD_BLOCK"
+      y: "DIAMOND_BLOCK"
+      b: "NETHER_STAR"

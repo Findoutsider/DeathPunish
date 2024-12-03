@@ -1,26 +1,32 @@
 package com.deathPunish;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public final class DeathPunish extends JavaPlugin {
+
+    private FileConfiguration epitaphConfig;
+    public ShapedRecipe enchantedGoldenAppleRecipe;
 
     @Override
     public void onEnable() {
         say("[DeathPunish] §a插件已加载");
          // 生成配置文件
         saveDefaultConfig();
+        FileConfiguration config = getConfig();
+        // 注册自定义物品的配方
+        registerCustomRecipes(config);
+//        fileCreate();
         // 注册事件监听器
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new EatCustomItemListener(), this);
@@ -28,7 +34,8 @@ public final class DeathPunish extends JavaPlugin {
         this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
         this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
 
-        getServer().addRecipe(CustomItems.createEnchantedGoldenApple());
+
+
     }
 
     @Override
@@ -40,6 +47,11 @@ public final class DeathPunish extends JavaPlugin {
     public void say(String s) {
         CommandSender sender = Bukkit.getConsoleSender();
         sender.sendMessage(s);
+    }
+
+    public void registerCustomRecipes(FileConfiguration config) {
+        enchantedGoldenAppleRecipe = CustomItems.createEnchantedGoldenApple(config);
+        getServer().addRecipe(enchantedGoldenAppleRecipe);
     }
 
     @Override
@@ -55,18 +67,8 @@ public final class DeathPunish extends JavaPlugin {
             // 配置文件存在，尝试加载配置
             try {
                 FileConfiguration config = getConfig();
-                // 检查配置文件是否有效
-                if (config.contains("version") && config.contains("punishOnDeath") && config.contains("defaultMaxHealth") 
-                        && config.contains("refillFoolLevelOnDeath") && config.contains("resetExpOnDeath") && config.contains("clearInventoryOnDeath")
-                        && config.contains("clearEnderchestOnDeath") && config.contains("banOnDeath") && config.contains("banReason")) {
-                    // 配置文件有效，仅读取
-                    return;
-                } else if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase("1.2.2")) {
-                    configFile.delete();
-                    getConfig().options().copyDefaults(true);
-                    saveConfig();
-                } else {
-                    // 配置文件无效，删除旧文件并重新写入默认配置
+                // 检查配置文件是否最新
+                if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase("1.3.1")) {
                     configFile.delete();
                     getConfig().options().copyDefaults(true);
                     saveConfig();
@@ -79,5 +81,15 @@ public final class DeathPunish extends JavaPlugin {
             }
         }
     }
+
+//    public void fileCreate() {
+//        // 创建 message 文件夹
+//        File messageFolder = new File(getDataFolder(), "message");
+//        if (!messageFolder.exists()) {
+//            messageFolder.mkdir();
+//        }
+//
+//        // 创建 epitaph.yml 文件
+//    }
 }
 

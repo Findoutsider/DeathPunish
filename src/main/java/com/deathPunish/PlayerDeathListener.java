@@ -1,41 +1,46 @@
 package com.deathPunish;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class PlayerDeathListener implements Listener {
 
-    public PlayerDeathListener(DeathPunish plugin) {
-    }
-
     private int foodLevel = 20;
     private boolean isdeath = false;
 
-    @EventHandler
-    public void onPlayerLogin(PlayerLoginEvent event) {
-        FileConfiguration config = DeathPunish.getPlugin(DeathPunish.class).getConfig();
-
-        var player = event.getPlayer();
-        player.setMaxHealth(config.getDouble("defaultMaxHealth"));
+    public PlayerDeathListener(DeathPunish plugin) {
     }
+
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         FileConfiguration config = DeathPunish.getPlugin(DeathPunish.class).getConfig();
+        // FileConfiguration epitaphConfig = plugin.getEpitaphConfig(); // 获取 epitaph.yml 配置
         if (config.getBoolean("punishOnDeath")) {
             // 获取玩家对象
             var player = event.getEntity();
+            if (config.getBoolean("enableEpitaph")) {
+                var position = player.getLocation();
 
+                position.getBlock().setType(Material.BEDROCK);
+//                List<String> epitaphs = epitaphConfig.getStringList("defaultEpitaph");
+//                if (!epitaphs.isEmpty()) {
+//                    Random random = new Random();
+//                    String selectedEpitaph = epitaphs.get(random.nextInt(epitaphs.size()));
+//                    // 创建悬浮文本
+//                    NMSUtil.createFloatingText(position.clone().add(0, 1, 0), selectedEpitaph);
+//                }
+                Epitaph.createFloatingText(position.clone().add(0, 1, 0), "§4§l" + player.getName() + "死于此地");
+            }
             // 获取饱食度
             foodLevel = player.getFoodLevel();
+            player.sendMessage(String.valueOf(foodLevel));
 
             // 清除玩家背包
             if (config.getBoolean("clearInventoryOnDeath")) {
