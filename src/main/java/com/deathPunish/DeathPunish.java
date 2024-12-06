@@ -3,18 +3,15 @@ package com.deathPunish;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Objects;
 
 public final class DeathPunish extends JavaPlugin {
 
+    public final static String VERSION = "1.3.4";
     private FileConfiguration epitaphConfig;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 
@@ -28,11 +25,12 @@ public final class DeathPunish extends JavaPlugin {
         registerCustomRecipes(config);
 //        fileCreate();
         // 注册事件监听器
-        getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         getServer().getPluginManager().registerEvents(new EatCustomItemListener(), this);
         // 注册命令
         this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
         this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
+        this.getCommand("dp").setExecutor(new DeathPunishCommand(this));
 
 
 
@@ -68,16 +66,18 @@ public final class DeathPunish extends JavaPlugin {
             try {
                 FileConfiguration config = getConfig();
                 // 检查配置文件是否最新
-                if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase("1.3.1")) {
+                if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase(VERSION)) {
                     configFile.delete();
                     getConfig().options().copyDefaults(true);
                     saveConfig();
+                    say("[DeathPunish] §a已将配置文件更新至 v" + VERSION);
                 }
             } catch (Exception e) {
                 // 配置文件加载失败，删除旧文件并重新写入默认配置
                 configFile.delete();
                 getConfig().options().copyDefaults(true);
                 saveConfig();
+                say("[DeathPunish] §c配置文件加载失败，已载入默认配置");
             }
         }
     }

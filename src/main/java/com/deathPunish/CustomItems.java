@@ -14,26 +14,27 @@ import java.util.Objects;
 
 public class CustomItems {
 
-    public static final NamespacedKey heal_apple = new NamespacedKey("deathpunish", "heal_apple");
+    public static final NamespacedKey heal = new NamespacedKey("deathpunish", "heal");
 
     public static ShapedRecipe createEnchantedGoldenApple(FileConfiguration config) {
         // 读取配置文件中的物品信息
-        String displayName = config.getString("customItems.heal_apple.displayName", "§6生命果实");
-        List<String> lore = config.getStringList("customItems.heal_apple.lore");
-        String shape1 = config.getString("customItems.heal_apple.shape1", "yxy");
-        String shape2 = config.getString("customItems.heal_apple.shape2", "xbx");
-        String shape3 = config.getString("customItems.heal_apple.shape3", "yxy");
-        @NotNull Map<String, Object> ingredients = Objects.requireNonNull(config.getConfigurationSection("customItems.heal_apple.ingredients")).getValues(false);
+        String materialItem = config.getString("customItems.heal_item.material", "ENCHANTED_GOLDEN_APPLE");
+        String displayName = config.getString("customItems.heal_item.displayName", "§6生命果实");
+        List<String> lore = config.getStringList("customItems.heal_item.lore");
+        String shape1 = config.getString("customItems.heal_item.shape1", "yxy");
+        String shape2 = config.getString("customItems.heal_item.shape2", "xbx");
+        String shape3 = config.getString("customItems.heal_item.shape3", "yxy");
+        @NotNull Map<String, Object> ingredients = Objects.requireNonNull(config.getConfigurationSection("customItems.heal_item.ingredients")).getValues(false);
 
         // 创建物品
-        ItemStack item = new ItemStack(Material.ENCHANTED_GOLDEN_APPLE);
+        ItemStack item = new ItemStack(Objects.requireNonNull(Material.matchMaterial(materialItem)));
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(displayName);
         meta.setLore(lore);
         item.setItemMeta(meta);
 
         // 创建配方
-        ShapedRecipe recipe = new ShapedRecipe(heal_apple, item)
+        ShapedRecipe recipe = new ShapedRecipe(heal, item)
                 .shape(shape1, shape2, shape3);
 
         // 设置配方成分

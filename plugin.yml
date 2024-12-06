@@ -1,16 +1,19 @@
 name: DeathPunish
 main: com.deathPunish.DeathPunish
-version: 1.3.1
+version: 1.3.4
 api-version: 1.13
 commands:
   deathpunish:
     description: 死亡惩罚
     usage: /deathpunish
-  setmaxhealth:
+  dp:
+    description: 死亡惩罚
+    usage: /deathpunish
+  set:
     #描述这个命令
     description: 设置玩家最大生命值
     #用法
-    usage: /deathpunish setmaxhealth <player> <maxhealth> <true/false>
+    usage: /deathpunish set <player> <maxhealth> <true/false>
     #执行此命令的人所需的权限
     permission: op
     #没有权限的提示消息
@@ -43,4 +46,10 @@ commands:
     #没有权限的提示消息
     permission-message: 你没有权限！
 
-
+permissions:
+  deathpunish.command:
+    description: deathpunish command permission
+    default: op
+  deathpunish.bypass:
+    description: deathpunish bypass permission
+    default: false
