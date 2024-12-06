@@ -17,5 +17,5 @@
 **标*内容可开关**
 
 ## 权限
-+ `deathpenalty.command` 使用deathpunish所有命令
-+ `deathpenalty.bypass` 绕过死亡惩罚 
++ `deathpunish.command` 使用deathpunish所有命令，默认op拥有该权限
++ `deathpunish.bypass` 绕过死亡惩罚 
