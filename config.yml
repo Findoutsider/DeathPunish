@@ -1,23 +1,29 @@
-version: "1.3.4"
+version: "1.3.5"
 # 是否启用死亡惩罚
 punishOnDeath: true
-# 死亡时减少玩家生命上限
-reduceMaxHealthOnDeath: true
-# 死亡时减少的生命值
-reduceHealthAmount: 2.0
-# 死亡是否重置玩家经验值
-resetExpOnDeath: false
-# 死亡是否清除玩家背包
-clearInventoryOnDeath: true
-# 死亡是否清除玩家末影箱
-clearEnderchestOnDeath: true
-# 血量上限为1时死亡后是否封禁玩家
-banOnDeath: false
 
-banReason: "§4§l你已经不能再复活了！"
+punishments:
+  # 死亡时减少玩家生命上限
+  reduceMaxHealthOnDeath: true
+  # 死亡时减少的生命值
+  reduceHealthAmount: 2.0
+  # 死亡是否重置玩家经验值
+  resetExpOnDeath: false
+  # 死亡是否清除玩家背包
+  clearInventoryOnDeath: true
+  # 死亡是否清除玩家末影箱
+  clearEnderchestOnDeath: true
+  # 触发死亡惩罚信息
+  deathMsg: "§4§l你死了，你因此受到了惩罚！"
+  # 跳过死亡惩罚
+  skipPunishMsg: "§a你逃过了死亡惩罚！"
+  # 血量上限为1时死亡后是否封禁玩家
+  banOnDeath: false
 
-# 启用墓碑
-enableEpitaph: true
+  banReason: "§4§l你已经不能再复活了！"
+
+  # 启用墓碑
+  enableEpitaph: true
 
 customItems:
   # 不能自己添加物品

@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public final class DeathPunish extends JavaPlugin {
 
-    public final static String VERSION = "1.3.4";
+    public final static String VERSION = "1.3.5";
     private FileConfiguration epitaphConfig;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 

@@ -1,6 +1,6 @@
 name: DeathPunish
 main: com.deathPunish.DeathPunish
-version: 1.3.4
+version: 1.3.5
 api-version: 1.13
 commands:
   deathpunish:
