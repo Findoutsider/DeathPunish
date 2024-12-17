@@ -17,8 +17,9 @@ public final class DeathPunish extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        say("[DeathPunish] §a插件已加载");
-         // 生成配置文件
+        int pluginId = 24171;
+        Metrics metrics = new Metrics(this, pluginId);
+        // 生成配置文件
         saveDefaultConfig();
         FileConfiguration config = getConfig();
         // 注册自定义物品的配方
@@ -31,6 +32,8 @@ public final class DeathPunish extends JavaPlugin {
         this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
         this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
         this.getCommand("dp").setExecutor(new DeathPunishCommand(this));
+        say("[DeathPunish] §a插件已加载");
+
 
 
 
