@@ -18,14 +18,14 @@ punishments:
   reduceExpOnDeath:
     enable: false
     # 按百分比扣除，无需添加%
-    value: 0
+    value: 0.1
   # 死亡减少玩家金钱
   reduceMoneyOnDeath:
     enable: false
     # 1为百分比，2为数值，百分比模式无需添加%
     mode: 1
     # 不能小于0
-    value: 0
+    value: 0.1
   # 死亡是否清除玩家背包
   clearInventoryOnDeath: false
   # 死亡是否清除玩家末影箱
