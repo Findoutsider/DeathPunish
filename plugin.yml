@@ -1,7 +1,8 @@
 name: DeathPunish
 main: com.deathPunish.DeathPunish
-version: 1.3.5
+version: 1.3.6
 api-version: 1.13
+folia-supported: true
 commands:
   deathpunish:
     description: 死亡惩罚
@@ -36,6 +37,15 @@ commands:
     permission: op
     #没有权限的提示消息
     permission-message: 你没有权限！
+  give:
+    #描述这个命令
+    description:
+    #用法
+    usage: /deathpunish give <player> <amount>
+    #执行此命令的人所需的权限
+    permission: op
+    #没有权限的提示消息
+    permission-message: 你没有权限！
   reload:
     #描述这个命令
     description: 重载插件配置
@@ -53,3 +63,9 @@ permissions:
   deathpunish.bypass:
     description: deathpunish bypass permission
     default: false
+  deathpunish.craft:
+    description: 允许制作回血物品
+    default: true
+  deathpunish.protect:
+    description: 允许使用死亡保护物品
+    default: true

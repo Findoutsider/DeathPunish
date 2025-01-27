@@ -1,50 +1,73 @@
-version: "1.3.5"
+version: "1.3.6"
 # 是否启用死亡惩罚
-punishOnDeath: true
+punishOnDeath:
+  enable: true
+  enableWorlds:
+    - "world"
+    - "world_the_end"
+# 若世界死亡不掉落未开启，则自动开启
+# 死亡不掉落不开启会导致功能异常
+autoSetRule: true
 
 punishments:
   # 死亡时减少玩家生命上限
   reduceMaxHealthOnDeath: true
   # 死亡时减少的生命值
-  reduceHealthAmount: 2.0
-  # 死亡是否重置玩家经验值
-  resetExpOnDeath: false
+  reduceHealthAmount: 2
+  # 死亡减少玩家等级
+  reduceExpOnDeath:
+    enable: false
+    # 按百分比扣除，无需添加%
+    value: 0
+  # 死亡减少玩家金钱
+  reduceMoneyOnDeath:
+    enable: false
+    # 1为百分比，2为数值，百分比模式无需添加%
+    mode: 1
+    # 不能小于0
+    value: 0
   # 死亡是否清除玩家背包
-  clearInventoryOnDeath: true
+  clearInventoryOnDeath: false
   # 死亡是否清除玩家末影箱
-  clearEnderchestOnDeath: true
+  clearEnderchestOnDeath: false
   # 触发死亡惩罚信息
   deathMsg: "§4§l你死了，你因此受到了惩罚！"
+  # 重生后获得debuff
+  debuff:
+    enable: false
+    potions:
+      - "weakness 2400 1"
+      - "slowness 2400 1"
   # 跳过死亡惩罚
   skipPunishMsg: "§a你逃过了死亡惩罚！"
   # 血量上限为1时死亡后是否封禁玩家
   banOnDeath: false
 
   banReason: "§4§l你已经不能再复活了！"
+  # 封禁时长，单位为分钟
+  banDuration: 1
 
   # 启用墓碑
-  enableEpitaph: true
+  enableEpitaph: false
+
+  epitaph: "§4§l%player%死于此地"
+
 
 customItems:
+  # 开启后可以使用其他插件来自定义配方
+  # 如果启用自定义配方，那么自定义物品中的配方不会生效
+  customRecipe: false
   # 不能自己添加物品
   heal_item:
-    # 最大生命值，填入整数
-    maxHealth: 20
+    # 显示名称
+    name: "&6生命果实"
     # 物品外观
     material: "ENCHANTED_GOLDEN_APPLE"
-    # 显示名称
-    displayName: "§6生命果实"
     # 描述
     lore:
       - "§7食用后恢复生命上限，并获取一些额外效果"
-    # 配方
-    shape1: "yxy"
-    shape2: "xbx"
-    shape3: "yxy"
-    ingredients:
-      x: "GOLD_BLOCK"
-      y: "DIAMOND_BLOCK"
-      b: "NETHER_STAR"
+    # 可恢复到的最大生命值，填入整数
+    maxHealth: 20
     # 恢复量
     heal_amount: 2
     # 药水效果、持续时间和等级
@@ -53,5 +76,32 @@ customItems:
       - "absorption 600 1"
     # 生命上限小于maxHealth时
     eatMsg: "§a你食用了生命果实，恢复了生命上限并获得了额外效果！"
-    # 生命上限大于maxHealth时
+    # 生命上限大于等于maxHealth时
     eatWithoutHealMsg: "§a你食用了生命果实！§c但无法继续提高生命上限！"
+    # 配方
+    shape1: "yxy"
+    shape2: "xbx"
+    shape3: "yxy"
+    ingredients:
+      x: "GOLD_BLOCK"
+      y: "DIAMOND_BLOCK"
+      b: "NETHER_STAR"
+
+  # 不提供合成，可自己更改名称和材料
+  # 优先消耗
+  protect_item:
+    name: "&6保护符"
+    material: "NAME_TAG"
+    lore:
+    - '&7'
+    - '&f把它放在背包可以免受一次死亡惩罚'
+    - '&f同时它也会随之消失'
+
+  ender_protect_item:
+    name: "&6末影保护符"
+    material: "ENDER_EYE"
+    lore:
+      - '&7'
+      - '&f把它放在末影箱可以免受一次死亡惩罚'
+      - '&f同时它也会随之消失'
+

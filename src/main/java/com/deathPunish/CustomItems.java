@@ -20,6 +20,7 @@ public class CustomItems {
         // 读取配置文件中的物品信息
         String materialItem = config.getString("customItems.heal_item.material", "ENCHANTED_GOLDEN_APPLE");
         String displayName = config.getString("customItems.heal_item.displayName", "§6生命果实");
+        displayName = displayName.replace("&", "§");
         List<String> lore = config.getStringList("customItems.heal_item.lore");
         String shape1 = config.getString("customItems.heal_item.shape1", "yxy");
         String shape2 = config.getString("customItems.heal_item.shape2", "xbx");
