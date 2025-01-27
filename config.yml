@@ -4,7 +4,8 @@ punishOnDeath:
   enable: true
   enableWorlds:
     - "world"
-    - "world_the_end"
+    # - "world_nether"
+    # - "world_the_end"
 # 若世界死亡不掉落未开启，则自动开启
 # 死亡不掉落不开启会导致功能异常
 autoSetRule: true
