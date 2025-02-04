@@ -1,8 +1,8 @@
 package com.deathPunish;
 
-import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.deathPunish.CustomItems.heal;
+import static com.deathPunish.CustomItems.recipe;
 import static com.deathPunish.DeathPunish.config;
 
 public class DeathPunishCommand implements CommandExecutor, TabExecutor {
@@ -76,7 +77,7 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
                         sender.sendMessage("§c设置的最大生命值必须为整数且不能小于1。");
                         return false;
                     }
-                    maxHealth = targetPlayer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
+                    maxHealth = targetPlayer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                     if (maxHealth != null) {
                         maxHealth.setBaseValue(Integer.parseInt(args[2]));
                     }
@@ -106,7 +107,7 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
                     Player targetPlayer = Bukkit.getPlayer(args[1]);
                     if (targetPlayer != null) {
                         try {
-                            maxHealth = targetPlayer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
+                            maxHealth = targetPlayer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                             if (maxHealth != null) {
                                 maxHealth.setBaseValue(maxHealth.getValue() + Integer.parseInt(args[2]));
                             }
@@ -133,14 +134,14 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
                         sender.sendMessage("[DeathPunish] §c/deathpunish get <player>");
                     } else {
                         targetPlayer = (Player) sender;
-                        maxHealth = targetPlayer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
+                        maxHealth = targetPlayer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                         sender.sendMessage("[DeathPunish] §a玩家 " + sender.getName() + " 的血量上限为" + maxHealth.getValue());
                         return true;
                     }
                 } else {
                     targetPlayer = Bukkit.getPlayer(args[1]);
                     if (targetPlayer != null) {
-                        maxHealth = targetPlayer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
+                        maxHealth = targetPlayer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                         sender.sendMessage("[DeathPunish] §a玩家 " + targetPlayer.getName() + " 的血量上限为" + maxHealth.getValue());
                         return true;
                     } else {
@@ -156,15 +157,7 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
                     sender.sendMessage("/deathpunish reload");
                     return false;
                 } else {
-                    try {
-                        pl.getServer().removeRecipe(heal);
-                    } catch (Exception e) {
-                        sender.sendMessage("[DeathPunish] §c重载失败: " + e.getMessage());
-                        e.printStackTrace();
-                        return false;
-                    }
                     pl.reloadConfig();
-                    registerCustomRecipes(pl.getConfig());
                     config = pl.getConfig();
                     sender.sendMessage("[DeathPunish] §a插件已重载");
                     return true;

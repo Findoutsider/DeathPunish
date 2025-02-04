@@ -1,18 +1,24 @@
 package com.deathPunish;
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
@@ -26,9 +32,11 @@ public class PlayerListener implements Listener {
     private static final Set<Action> ACTIONS = Collections.unmodifiableSet(EnumSet.of(Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK));
     private static String method;
     private boolean isDeath = false;
+    private final Plugin pl;
     AttributeInstance playerMaxHealth;
 
     public PlayerListener(DeathPunish plugin) {
+        this.pl = plugin;
     }
 
     @EventHandler
@@ -68,7 +76,7 @@ public class PlayerListener implements Listener {
                         item.setAmount(item.getAmount() - 1);
                         player.sendMessage(Objects.requireNonNull(config.getString("punishments.skipPunishMsg")));
                         method = item.getItemMeta().getDisplayName();
-                        log.info("玩家 " +player.getName()+ " 因为§a"  + method + " §b跳过死亡惩罚");
+                        log.info("玩家 " + player.getName() + " 因为§a" + method + " §b跳过死亡惩罚");
                         return;
                     }
                 }
@@ -78,13 +86,13 @@ public class PlayerListener implements Listener {
                         item.setAmount(item.getAmount() - 1);
                         player.sendMessage(Objects.requireNonNull(config.getString("punishments.skipPunishMsg")));
                         method = item.getItemMeta().getDisplayName();
-                        log.info("玩家 " +player.getName()+ " 因为§a " + method + " §b跳过死亡惩罚");
+                        log.info("玩家 " + player.getName() + " 因为§a " + method + " §b跳过死亡惩罚");
                         return;
                     }
                 }
 
                 this.isDeath = true;
-                log.info("§c玩家 §r" + player.getName() +"§c 受到了死亡惩罚");
+                log.info("§c玩家 §r" + player.getName() + "§c 受到了死亡惩罚");
                 if (config.getBoolean("punishments.enableEpitaph")) {
                     var position = player.getLocation();
 
@@ -129,6 +137,44 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
+//            if (config.getBoolean("punishOnDeath.enable")) {
+//                player.sendMessage(Objects.requireNonNull(config.getString("punishments.deathMsg")));
+//                // 读取当前玩家的最大生命值
+//                double maxHealth = playerMaxHealth.getValue();
+//                double reduceHealthAmount = config.getDouble("punishments.reduceHealthAmount");
+//                if (config.getBoolean("punishments.banOnDeath") && maxHealth == 1) {
+//                    Date expiration = new Date(System.currentTimeMillis() + (long) config.getInt("punishments.banDuration") * 60 * 1000);
+//                    Bukkit.getBanList(BanList.Type.NAME).addBan(
+//                            player.getName(),
+//                            config.getString("punishments.banReason"),
+//                            expiration,
+//                            null);
+//                    player.kick(Component.text(Objects.requireNonNull(config.getString("punishments.banReason"))));
+//                }
+//                // 减少最大生命值
+//                if (config.getBoolean("punishments.reduceMaxHealthOnDeath")) {
+//                    double newMaxHealth = Math.max(maxHealth - reduceHealthAmount, 1.0); // 最小值为1.0}
+//                    // 设置玩家的新最大生命值
+//                    playerMaxHealth.setBaseValue(newMaxHealth);
+//                    player.setHealth(newMaxHealth); // 重置当前生命值为新的最大值
+//                }
+//                if (config.getBoolean("punishments.debuff.enable")) {
+//                    List<String> debuff = config.getStringList("punishments.debuff.potions");
+//                    for (String effect : debuff) {
+//                        String[] parts = effect.split(" ");
+//                        if (parts.length == 3) {
+//                            PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(parts[0]));
+//                            int duration = Integer.parseInt(parts[1]);
+//                            int amplifier = Integer.parseInt(parts[2]);
+//                            if (type != null) {
+//                                player.addPotionEffect(new PotionEffect(type, duration, amplifier));
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                this.isDeath = false;
+//        }
         }else {
             method = "拥有bypass权限";
             log.info("玩家 " +player.getName()+ " 因为§a " + method + " §b跳过死亡惩罚");
@@ -138,7 +184,7 @@ public class PlayerListener implements Listener {
 
 
     @EventHandler
-    public void onPlayerRespawn(PlayerPostRespawnEvent event) {
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
         if (this.isDeath) {
             if (config.getBoolean("punishOnDeath.enable")) {
@@ -147,8 +193,13 @@ public class PlayerListener implements Listener {
                 double maxHealth = playerMaxHealth.getValue();
                 double reduceHealthAmount = config.getDouble("punishments.reduceHealthAmount");
                 if (config.getBoolean("punishments.banOnDeath") && maxHealth == 1) {
-                    player.ban(config.getString("punishments.banReason"), (Date) config.get("punishments.banDuration"), null, true);
-
+                    Date expiration = new Date(System.currentTimeMillis() + (long) config.getInt("punishments.banDuration") * 60 * 1000);
+                    Bukkit.getBanList(BanList.Type.NAME).addBan(
+                            player.getName(),
+                            config.getString("punishments.banReason"),
+                            expiration,
+                            "DeathPunish");
+                    player.kick(Component.text(Objects.requireNonNull(config.getString("punishments.banReason"))));
                 }
                 // 减少最大生命值
                 if (config.getBoolean("punishments.reduceMaxHealthOnDeath")) {
@@ -159,17 +210,28 @@ public class PlayerListener implements Listener {
                 }
                 if (config.getBoolean("punishments.debuff.enable")) {
                     List<String> debuff = config.getStringList("punishments.debuff.potions");
-                    for (String effect : debuff) {
-                        String[] parts = effect.split(" ");
-                        if (parts.length == 3) {
-                            PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(parts[0]));
-                            int duration = Integer.parseInt(parts[1]);
-                            int amplifier = Integer.parseInt(parts[2]);
-                            if (type != null) {
-                                player.addPotionEffect(new PotionEffect(type, duration, amplifier));
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            for (String effect : debuff) {
+                                log.info(effect);
+                                String[] parts = effect.split(" ");
+                                if (parts.length == 3) {
+                                    PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(parts[0]));
+                                    int duration = Integer.parseInt(parts[1]);
+                                    int amplifier = Integer.parseInt(parts[2]);
+                                    if (type != null) {
+                                        log.info(String.valueOf(duration));
+                                        log.info(String.valueOf(amplifier));
+                                        boolean res =  player.addPotionEffect(new PotionEffect(type, duration, amplifier));
+                                        log.info(String.valueOf(res));
+                                    } else {
+                                        log.info("无效的药水效果: " + parts[0]);
+                                    }
+                                }
                             }
                         }
-                    }
+                    }.runTaskLater(pl, 5L);
                 }
 
                 this.isDeath = false;

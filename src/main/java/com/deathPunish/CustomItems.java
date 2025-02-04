@@ -15,6 +15,7 @@ import java.util.Objects;
 public class CustomItems {
 
     public static final NamespacedKey heal = new NamespacedKey("deathpunish", "heal");
+    public static ShapedRecipe recipe;
 
     public static ShapedRecipe createEnchantedGoldenApple(FileConfiguration config) {
         // 读取配置文件中的物品信息
@@ -35,7 +36,7 @@ public class CustomItems {
         item.setItemMeta(meta);
 
         // 创建配方
-        ShapedRecipe recipe = new ShapedRecipe(heal, item)
+        recipe = new ShapedRecipe(heal, item)
                 .shape(shape1, shape2, shape3);
 
         // 设置配方成分

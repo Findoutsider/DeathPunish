@@ -7,9 +7,8 @@ commands:
   deathpunish:
     description: 死亡惩罚
     usage: /deathpunish
-  dp:
-    description: 死亡惩罚
-    usage: /deathpunish
+    aliases:
+      - dp
   set:
     #描述这个命令
     description: 设置玩家最大生命值

@@ -19,7 +19,7 @@ public class Epitaph {
         double x = (int) (location.getX()) - 0.5;
         double y = location.getY();
         double z = (int) (location.getZ()) - 0.5;
-        armorStand.teleportAsync(new Location(location.getWorld(), x, y, z));
+        armorStand.teleport(new Location(location.getWorld(), x, y, z));
 
 
     }

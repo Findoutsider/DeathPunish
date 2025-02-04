@@ -49,7 +49,6 @@ public final class DeathPunish extends JavaPlugin {
         // 注册命令
         this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
         this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
-        this.getCommand("dp").setExecutor(new DeathPunishCommand(this));
         setWorldRule();
         log.info("[DeathPunish] §a插件已启用");
         checkForUpdates();
@@ -63,6 +62,7 @@ public final class DeathPunish extends JavaPlugin {
 
     public void registerCustomRecipes(FileConfiguration config) {
         enchantedGoldenAppleRecipe = CustomItems.createEnchantedGoldenApple(config);
+        getServer().resetRecipes(); // 重置配方
         getServer().addRecipe(enchantedGoldenAppleRecipe);
     }
 

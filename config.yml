@@ -4,7 +4,8 @@ punishOnDeath:
   enable: true
   enableWorlds:
     - "world"
-    - "world_the_end"
+    # - "world_nether"
+    # - "world_the_end"
 # 若世界死亡不掉落未开启，则自动开启
 # 死亡不掉落不开启会导致功能异常
 autoSetRule: true
@@ -56,7 +57,7 @@ punishments:
 customItems:
   # 开启后可以使用其他插件来自定义配方
   # 如果启用自定义配方，那么自定义物品中的配方不会生效
-  customRecipe: false
+  # customRecipe: false
   # 不能自己添加物品
   heal_item:
     # 显示名称
