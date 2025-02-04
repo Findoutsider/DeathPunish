@@ -15,15 +15,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Objects;
 
 public final class DeathPunish extends JavaPlugin {
 
-    public final static String VERSION = "1.3.6";
+    public final static String VERSION = "1.3.8";
     public static Economy econ = null;
     public static boolean enableEco = false;
     private FileConfiguration epitaphConfig;
@@ -50,7 +54,7 @@ public final class DeathPunish extends JavaPlugin {
         this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
         this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
         setWorldRule();
-        log.info("[DeathPunish] §a插件已启用");
+        log.info("插件已启用");
         checkForUpdates();
     }
 
@@ -84,14 +88,14 @@ public final class DeathPunish extends JavaPlugin {
                     configFile.delete();
                     getConfig().options().copyDefaults(true);
                     saveConfig();
-                    log.info("[DeathPunish] §a已更新配置文件至 v" + VERSION);
+//                    log.info("[DeathPunish] §a已更新配置文件至 v" + VERSION);
                 }
             } catch (Exception e) {
                 // 如果配置文件读取失败，删除文件并写入默认配置
                 configFile.delete();
                 getConfig().options().copyDefaults(true);
                 saveConfig();
-                log.info("[DeathPunish] §c配置文件读取失败，已恢复默认配置");
+                log.err("配置文件读取失败，已恢复默认配置");
             }
         }
     }
@@ -105,7 +109,7 @@ public final class DeathPunish extends JavaPlugin {
                 result = true;
             }
         }
-        if (result) enableEco = true; log.info("[DeathPunish] §a经济内容已启动");
+        if (result) enableEco = true; log.info("经济内容已启动");
     }
 
     public static Economy getEconomy() {
@@ -128,37 +132,55 @@ public final class DeathPunish extends JavaPlugin {
 
     private void checkForUpdates() {
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url("https://api.github.com/repos/Findoutsider/DeathPunish/releases/latest")
-                    .build();
+            try {
+                URL url = new URL("https://api.github.com/repos/Findoutsider/DeathPunish/releases/latest");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
 
-            try (Response response = client.newCall(request).execute()) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String responseBody = response.body().string();
-                    JSONParser parser = new JSONParser();
-                    JSONObject jsonObject = (JSONObject) parser.parse(responseBody);
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    JSONObject jsonObject = getJsonObject(connection);
                     String latestVersion = (String) jsonObject.get("tag_name");
-                    if (latestVersion != null && !latestVersion.equals("v" + VERSION)) {
-                        log.info("[DeathPunish] 发现新版本: " + latestVersion);
+                    String info = (String) jsonObject.get("body");
+
+                    if (latestVersion != null && !latestVersion.equalsIgnoreCase("v" + VERSION)) {
+                        log.info("检测到新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新");
+                        if (!info.equalsIgnoreCase("")) {
+                            log.info("新版本信息: " + info);
+                        }
                         for (Player player : Bukkit.getOnlinePlayers()) {
                             if (player.isOp()) {
-                                player.sendMessage("[DeathPunish] §c发现新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新插件");
+                                player.sendMessage("§8[§bDeathPunish§8] §r检测到新版本: §a" + latestVersion
+                                        + "§r，请前往 https://github.com/Findoutsider/DeathPunish 更新");
+                                if (!info.equalsIgnoreCase("")) {
+                                    player.sendMessage("§8[§bDeathPunish§8] §r新版本信息: §a" + info);
+                                }
                             }
                         }
                     } else {
-                        log.info("[DeathPunish] 当前版本是最新的: v" + VERSION);
+                        log.info("当前版本已是最新: v" + VERSION);
                     }
                 } else {
-                    log.err("[DeathPunish] 获取最新版本失败: " + response.code());
+                    log.err("获取最新版本失败: " + responseCode);
                 }
             } catch (IOException | org.json.simple.parser.ParseException e) {
-                log.err("[DeathPunish] 获取最新版本时发生错误: " + e.getMessage());
+                log.err("获取最新版本时发生异常: " + e.getMessage());
                 e.printStackTrace();
             }
         });
     }
 
+    private static JSONObject getJsonObject(HttpURLConnection connection) throws IOException, org.json.simple.parser.ParseException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+        }
+        in.close();
 
+        JSONParser parser = new JSONParser();
+        return (JSONObject) parser.parse(content.toString());
+    }
 
 }
