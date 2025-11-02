@@ -1,4 +1,4 @@
-package com.deathPunish.Utils;
+package com.deathPunish.utils;
 
 import com.deathPunish.DeathPunish;
 import org.bukkit.Bukkit;

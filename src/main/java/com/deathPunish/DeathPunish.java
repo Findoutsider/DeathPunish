@@ -1,10 +1,11 @@
 package com.deathPunish;
 
 import com.deathPunish.Listener.PlayerDeathListener;
-import com.deathPunish.Utils.Metrics;
-import com.deathPunish.Utils.SchedulerUtils;
-import com.deathPunish.Utils.manager.CustomItems;
-import com.deathPunish.Utils.manager.WorldManger;
+import com.deathPunish.utils.LoggerUtils;
+import com.deathPunish.utils.Metrics;
+import com.deathPunish.utils.SchedulerUtils;
+import com.deathPunish.utils.manager.CustomItems;
+import com.deathPunish.utils.manager.WorldManager;
 import com.deathPunish.commands.DeathPunishCommand;
 import com.tcoded.folialib.FoliaLib;
 import net.milkbowl.vault.economy.Economy;
@@ -26,29 +27,32 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
+import static com.deathPunish.utils.manager.ConfigManager.getAllConfigs;
+
 public final class DeathPunish extends JavaPlugin {
 
     private static FoliaLib foliaLib;
-    private static WorldManger worldManger;
+    private static WorldManager worldManager;
     public static FileConfiguration config;
-    public static com.deathPunish.Utils.LoggerUtils log;
+    public static LoggerUtils log;
 
-    public final static String VERSION = "1.4.2";
+    public final static String VERSION = "1.4.3";
     public static Map<Boolean, String> ifNeedUpdate = new HashMap<>();;
     public static Economy econ = null;
     public static boolean enableEco = false;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 
     public static FoliaLib getFoliaLib() { return foliaLib; }
-    public static WorldManger getWorldManger() { return worldManger; }
+    public static WorldManager getWorldManger() { return worldManager; }
 
     @Override
     public void onEnable() {
         // 初始化
-        log = new com.deathPunish.Utils.LoggerUtils();
+        log = new LoggerUtils();
         config = getConfig();
+        getAllConfigs();
         foliaLib = new FoliaLib(this);
-        worldManger = new WorldManger(this);
+        worldManager = new WorldManager(this);
 
         // stats
         new Metrics(this, 24171);

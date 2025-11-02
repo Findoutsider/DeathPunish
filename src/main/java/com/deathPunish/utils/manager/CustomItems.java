@@ -1,4 +1,4 @@
-package com.deathPunish.Utils.manager;
+package com.deathPunish.utils.manager;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;

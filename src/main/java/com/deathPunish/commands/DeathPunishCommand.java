@@ -1,8 +1,8 @@
 package com.deathPunish.commands;
 
 import com.deathPunish.DeathPunish;
-import com.deathPunish.Utils.manager.CustomItems;
-import com.deathPunish.Utils.manager.WorldManger;
+import com.deathPunish.utils.manager.CustomItems;
+import com.deathPunish.utils.manager.WorldManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.deathPunish.DeathPunish.config;
+import static com.deathPunish.utils.manager.ConfigManager.getAllConfigs;
 
 public class DeathPunishCommand implements CommandExecutor, TabExecutor {
     private final Plugin pl;
@@ -94,7 +95,7 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
                     }
                     return true;
                 } else {
-                    sender.sendMessage("[DeathPunish] §c找不到玩家 " + targetPlayer.getName());
+                    sender.sendMessage("[DeathPunish] §c找不到玩家 " + args[1]);
                     return false;
                 }
             }
@@ -160,6 +161,7 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
                 } else {
                     pl.reloadConfig();
                     config = pl.getConfig();
+                    getAllConfigs();
                     DeathPunish.getWorldManger().setWorldRule();
                     sender.sendMessage("[DeathPunish] §a插件已重载");
                     return true;

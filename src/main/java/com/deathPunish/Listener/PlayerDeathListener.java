@@ -1,8 +1,8 @@
 package com.deathPunish.Listener;
 
 import com.deathPunish.DeathPunish;
-import com.deathPunish.Utils.EpitaphUtils;
-import com.deathPunish.Utils.SchedulerUtils;
+import com.deathPunish.utils.EpitaphUtils;
+import com.deathPunish.utils.SchedulerUtils;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
@@ -22,6 +23,7 @@ import java.util.*;
 
 import static com.deathPunish.DeathPunish.*;
 import static com.deathPunish.DeathPunish.log;
+import static com.deathPunish.utils.manager.ConfigManager.*;
 
 
 public class PlayerDeathListener implements Listener {
@@ -34,8 +36,7 @@ public class PlayerDeathListener implements Listener {
 
     public PlayerDeathListener(DeathPunish plugin) {
         this.pl = plugin;
-        List<String> whitelist = config.getStringList("punishments.Inventory.whitelist");
-        for (String wl : whitelist) {
+        for (String wl : inventoryWhitelist) {
             try {
                 Material material = Material.valueOf(wl);
                 materials.add(material);
@@ -62,39 +63,37 @@ public class PlayerDeathListener implements Listener {
     private void playerDeath(Player player) {
         Runnable r = () -> {
             if (this.isDeath) {
-                if (config.getBoolean("punishOnDeath.enable")) {
+                if (enableDeathPunish) {
                     List<String> deathMsg = Objects.requireNonNull(config.getStringList("punishments.deathMsg"));
                     for (String msg : deathMsg) {
                         player.sendMessage(msg);
                     }
                     // 读取当前玩家的最大生命值
                     double maxHealth = playerMaxHealth.getValue();
-                    double reduceHealthAmount = config.getDouble("punishments.reduceHealthAmount");
-                    if (config.getBoolean("punishments.banOnDeath") && maxHealth == 1) {
-                        Date expiration = new Date(System.currentTimeMillis() + (long) config.getInt("punishments.banDuration") * 60 * 1000);
+                    if (banOnDeath && maxHealth == 1) {
+                        Date expiration = new Date(System.currentTimeMillis() + (long) banDuration * 60 * 1000);
                         Bukkit.getBanList(BanList.Type.NAME).addBan(
                                 player.getName(),
-                                config.getString("punishments.banReason"),
+                                banReason,
                                 expiration,
                                 "DeathPunish");
-                        player.kickPlayer(Objects.requireNonNull(config.getString("punishments.banReason")));
+                        player.kickPlayer(Objects.requireNonNull(banReason));
                     }
                     // 减少最大生命值
-                    if (config.getBoolean("punishments.reduceMaxHealthOnDeath")) {
+                    if (reduceMaxHealthOnDeath) {
                         double newMaxHealth = Math.max(maxHealth - reduceHealthAmount, 1.0); // 最小值为1.0}
                         // 设置玩家的新最大生命值
                         playerMaxHealth.setBaseValue(newMaxHealth);
                         player.setHealth(newMaxHealth); // 重置当前生命值为新的最大值
                     }
-                    if (config.getBoolean("punishments.foodLevel.save")) {
+                    if (foodLevelSave) {
                         SchedulerUtils.runTaskLater(pl,() -> player.setFoodLevel(food), 1L);
                     } else {
-                        SchedulerUtils.runTaskLater(pl,() -> player.setFoodLevel(config.getInt("punishments.foodLevel.value")), 1L);
+                        SchedulerUtils.runTaskLater(pl,() -> player.setFoodLevel(foodLevelValue), 1L);
                     }
-                    if (config.getBoolean("punishments.debuff.enable")) {
-                        List<String> debuff = config.getStringList("punishments.debuff.potions");
+                    if (debuffEnable) {
                         SchedulerUtils.runTask(pl, () -> {
-                            for (String effect : debuff) {
+                            for (String effect : debuffPotions) {
                                 String[] parts = effect.split(" ");
                                 if (parts.length == 3) {
                                     PotionEffectType type = PotionEffectType.getByKey(NamespacedKey.minecraft(parts[0]));
@@ -125,8 +124,7 @@ public class PlayerDeathListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         var player = event.getEntity();
         World world = player.getWorld();
-        List<String> worlds = config.getStringList("punishOnDeath.enableWorlds");
-        if (!worlds.contains(world.getName())) {
+        if (!enableWorlds.contains(world.getName())) {
             log.info("§c玩家 " + player.getName() + " 在未启用死亡惩罚的 " + world.getName() + " 世界中死亡");
             return;
         }
@@ -135,7 +133,7 @@ public class PlayerDeathListener implements Listener {
         if (!player.hasPermission("deathpunish.bypass")) {
 
             // FileConfiguration epitaphConfig = plugin.getEpitaphConfig(); // 获取 epitaph.yml 配置
-            if (config.getBoolean("punishOnDeath.enable")) {
+            if (enableDeathPunish) {
                 @Nullable ItemStack[] contents = player.getInventory().getContents();
                 @Nullable ItemStack[] contents1 = player.getEnderChest().getContents();
                 Material material1 = Material.valueOf(config.getString("customItems.protect_item.material"));
@@ -148,7 +146,7 @@ public class PlayerDeathListener implements Listener {
                     if (meta != null && meta.hasDisplayName()) {
                         if (item.getType() == material1 && item.getItemMeta().getDisplayName().replace("§", "&").equalsIgnoreCase(config.getString("customItems.protect_item.name"))) {
                             item.setAmount(item.getAmount() - 1);
-                            player.sendMessage(Objects.requireNonNull(config.getString("punishments.skipPunishMsg")));
+                            player.sendMessage(Objects.requireNonNull(skipPunishMsg));
                             method = item.getItemMeta().getDisplayName();
                             log.info("玩家 " + player.getName() + " 因为§a" + method + " §b跳过死亡惩罚");
                             return;
@@ -165,7 +163,7 @@ public class PlayerDeathListener implements Listener {
                                 .replace("§", "&")
                                 .equalsIgnoreCase(config.getString("customItems.ender_protect_item.name"))) {
                             item.setAmount(item.getAmount() - 1);
-                            player.sendMessage(Objects.requireNonNull(config.getString("punishments.skipPunishMsg")));
+                            player.sendMessage(Objects.requireNonNull(skipPunishMsg));
                             method = item.getItemMeta().getDisplayName();
                             log.info("玩家 " + player.getName() + " 因为§a " + method + " §b跳过死亡惩罚");
                             return;
@@ -176,12 +174,11 @@ public class PlayerDeathListener implements Listener {
                 this.isDeath = true;
                 this.food = player.getFoodLevel();
                 log.info("§c玩家 §r" + player.getName() + "§c 受到了死亡惩罚");
-                if (config.getBoolean("punishments.enableEpitaph")) {
+                if (enableEpitaph) {
                     var position = player.getLocation();
 
                     position.getBlock().setType(Material.BEDROCK);
 
-                    String epitaph = config.getString("punishments.epitaph");
                     if (epitaph != null && epitaph.contains("%player%")) {
                         epitaph = epitaph.replace("%player%", player.getName());
                     }
@@ -189,57 +186,36 @@ public class PlayerDeathListener implements Listener {
                 }
 
                 // 背包
-                if (config.getBoolean("punishments.Inventory.enable")) {
-                    if (Objects.requireNonNull(config.getString("punishments.Inventory.mode")).equalsIgnoreCase("all")) {
-                        for (ItemStack item : player.getInventory().getContents()) {
-                            if (item != null && !materials.contains(item.getType())) {
-                                player.getInventory().remove(item);
-                                if (!config.getBoolean("punishments.Inventory.clean")) {
-                                    player.getWorld().dropItemNaturally(player.getLocation(), item);
-                                }
-                            }
-                        }
+                if (inventoryEnable) {
+                    if (inventoryMode.equalsIgnoreCase("all")) {
+                        clearInventoryContainOffhandAndArmor(player, materials, !inventoryClean);
                     }
 
                     if (Objects.requireNonNull(config.getString("punishments.Inventory.mode")).equalsIgnoreCase("part")) {
                         int min = config.getInt("punishments.Inventory.amount.min");
                         int max = config.getInt("punishments.Inventory.amount.max");
-                        int dropAmount = rand.nextInt(min, max+1);
+                        int dropAmount = rand.nextInt(max - min + 1) + min;
                         if (min == max) dropAmount = min;
 
-
-                        List<ItemStack> inventory = new ArrayList<>(Arrays.asList(player.getInventory().getContents()));
-                        inventory.removeIf(Objects::isNull);
-                        inventory.removeIf(item -> materials.contains(item.getType()));
-                        Collections.shuffle(inventory);
-
-                        dropAmount = Math.min(dropAmount, inventory.size());
-
-                        for (int i = 0; i < dropAmount; i++) {
-                            ItemStack item = inventory.get(i);
-                            player.getInventory().clear(player.getInventory().first(item));
-                            if (!config.getBoolean("punishments.Inventory.clean")) {
-                                player.getWorld().dropItemNaturally(player.getLocation(), item);
-                            }
-                        }
+                        removeItemFromInventoryContainOffhandAndArmor(player, materials, dropAmount, !inventoryClean);
                     }
                 }
-                if (config.getBoolean("punishments.clearEnderchestOnDeath")) {
+                if (clearEnderchestOnDeath) {
                     player.getEnderChest().clear();
                 }
 
-                if (config.getBoolean("punishments.reduceExpOnDeath.enable")) {
+                if (reduceExpOnDeathEnable) {
                     player.setTotalExperience(0);
                     int level = player.getLevel();
-                    player.setLevel((int) (level * (1 - config.getDouble("punishments.reduceExpOnDeath.value"))));
+                    player.setLevel((int) (level * (1 - reduceExpValue)));
                 }
 
-                if (config.getBoolean("punishments.reduceMoneyOnDeath.enable")) {
+                if (reduceMoneyOnDeathEnable) {
                     double balance = econ.getBalance(player);
-                    if (config.getInt("punishments.reduceMoneyOnDeath.mode") == 1) {
-                        econ.withdrawPlayer(player, balance * (1 - config.getDouble("punishments.reduceMoneyOnDeath.value")));
-                    } else if (config.getInt("punishments.reduceMoneyOnDeath.mode") == 2) {
-                        econ.withdrawPlayer(player, (config.getDouble("punishments.reduceMoneyOnDeath.value")));
+                    if (reduceMoneyMode == 1) {
+                        econ.withdrawPlayer(player, balance * (1 - reduceMoneyValue));
+                    } else if (reduceMoneyMode == 2) {
+                        econ.withdrawPlayer(player, reduceMoneyValue);
                     } else {
                         log.err("punishments.reduceMoneyOnDeath.mode 配置错误，值应为1或2");
                     }
@@ -248,7 +224,86 @@ public class PlayerDeathListener implements Listener {
         } else {
             method = "拥有bypass权限";
             log.info("玩家 " + player.getName() + " 因为§a " + method + " §b跳过死亡惩罚");
-            player.sendMessage(Objects.requireNonNull(config.getString("punishments.skipPunishMsg")));
+            player.sendMessage(Objects.requireNonNull(skipPunishMsg));
+        }
+    }
+
+    private void clearInventoryContainOffhandAndArmor(Player player, List<Material> filter, Boolean isDrop) {
+        PlayerInventory inv = player.getInventory();
+
+        List<ItemStack> items = new ArrayList<>(Arrays.asList(inv.getContents()));
+        items.removeIf(Objects::isNull);
+        items.removeIf(item -> filter.contains(item.getType()));
+
+        ItemStack offhand = inv.getItemInOffHand();
+        ItemStack helmet = inv.getHelmet();
+        ItemStack chestplate = inv.getChestplate();
+        ItemStack leggings = inv.getLeggings();
+        ItemStack boots = inv.getBoots();
+
+        for (ItemStack item : items) {
+            if (Objects.equals(offhand, item)) { inv.setItemInOffHand(null); }
+            if (helmet != null && helmet.equals(item)) { inv.setHelmet(null); }
+            if (chestplate != null && chestplate.equals(item)) { inv.setChestplate(null); }
+            if (leggings != null && leggings.equals(item)) { inv.setLeggings(null); }
+            if (boots != null && boots.equals(item)) { inv.setBoots(null); }
+            inv.remove(item);
+            if (isDrop) {
+                player.getWorld().dropItemNaturally(player.getLocation(), item);
+            }
+        }
+    }
+
+    private void removeItemFromInventoryContainOffhandAndArmor(Player player, List<Material> filter, Integer count, Boolean isDrop) {
+        PlayerInventory inv = player.getInventory();
+
+        // 创建一个包含索引信息的物品列表
+        List<IndexedItem> indexedItems = new ArrayList<>();
+        ItemStack[] contents = inv.getContents();
+        
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (item != null && !filter.contains(item.getType())) {
+                indexedItems.add(new IndexedItem(item, i));
+            }
+        }
+        
+        Collections.shuffle(indexedItems);
+        if (indexedItems.isEmpty()) return;
+
+        for (int removed = 0; removed < count && !indexedItems.isEmpty(); removed++) {
+            IndexedItem indexedItem = indexedItems.get(0);
+            ItemStack item = indexedItem.item;
+            int index = indexedItem.index;
+
+            if (index == 40) { // 副手槽位
+                inv.setItemInOffHand(null);
+            } else if (index == 39) { // 头盔槽位
+                inv.setHelmet(null);
+            } else if (index == 38) { // 胸甲槽位
+                inv.setChestplate(null);
+            } else if (index == 37) { // 护腿槽位
+                inv.setLeggings(null);
+            } else if (index == 36) { // 靴子槽位
+                inv.setBoots(null);
+            } else {
+                inv.setItem(index, null);
+            }
+            
+            if (isDrop) {
+                player.getWorld().dropItemNaturally(player.getLocation(), item);
+            }
+            indexedItems.remove(0);
+        }
+    }
+
+    private static class IndexedItem {
+        final ItemStack item;
+        final int index;
+        
+        IndexedItem(ItemStack item, int index) {
+            this.item = item;
+            this.index = index;
         }
     }
 

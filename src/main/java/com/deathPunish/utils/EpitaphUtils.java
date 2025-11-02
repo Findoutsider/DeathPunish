@@ -1,4 +1,4 @@
-package com.deathPunish.Utils;
+package com.deathPunish.utils;
 
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
