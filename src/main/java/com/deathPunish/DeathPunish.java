@@ -36,7 +36,7 @@ public final class DeathPunish extends JavaPlugin {
     public static FileConfiguration config;
     public static LoggerUtils log;
 
-    public final static String VERSION = "1.4.3";
+    public final static String VERSION = "1.4.4";
     public static Map<Boolean, String> ifNeedUpdate = new HashMap<>();;
     public static Economy econ = null;
     public static boolean enableEco = false;
@@ -67,6 +67,7 @@ public final class DeathPunish extends JavaPlugin {
         // 注册事件监听器
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new com.deathPunish.Listener.EatCustomItemListener(), this);
+
 
         // 注册命令
         this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));

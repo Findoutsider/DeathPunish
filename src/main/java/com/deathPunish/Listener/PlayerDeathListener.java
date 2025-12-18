@@ -213,9 +213,11 @@ public class PlayerDeathListener implements Listener {
                 if (reduceMoneyOnDeathEnable) {
                     double balance = econ.getBalance(player);
                     if (reduceMoneyMode == 1) {
-                        econ.withdrawPlayer(player, balance * (1 - reduceMoneyValue));
-                    } else if (reduceMoneyMode == 2) {
+                        econ.withdrawPlayer(player, balance * reduceMoneyValue);
+                    } else if (reduceMoneyMode == 2 && reduceMoneyValue >= 0) {
                         econ.withdrawPlayer(player, reduceMoneyValue);
+                    } else if (reduceMoneyMode == 2 && reduceMoneyValue < 0) {
+                        log.err("你可能在punishments.reduceMoneyOnDeath.value 的值不能为负数");
                     } else {
                         log.err("punishments.reduceMoneyOnDeath.mode 配置错误，值应为1或2");
                     }
