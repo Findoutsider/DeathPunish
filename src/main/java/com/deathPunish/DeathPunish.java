@@ -6,6 +6,7 @@ import com.deathPunish.Listener.PlayerDeathListener;
 import com.deathPunish.Listener.PlayerInteractListener;
 import com.deathPunish.Listener.PlayerJoinListener;
 import com.deathPunish.service.CustomItemService;
+import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PunishmentService;
 import com.deathPunish.utils.LoggerUtils;
 import com.deathPunish.utils.Metrics;
@@ -39,6 +40,7 @@ public final class DeathPunish extends JavaPlugin {
     private PluginConfig pluginConfig;
     private CustomItemService customItemService;
     private PunishmentService punishmentService;
+    private MessageService messageService;
 
     public static volatile String latestVersion;
     public static volatile boolean updateAvailable;
@@ -51,16 +53,18 @@ public final class DeathPunish extends JavaPlugin {
     public PluginConfig getPluginConfig() { return pluginConfig; }
     public CustomItemService getCustomItemService() { return customItemService; }
     public PunishmentService getPunishmentService() { return punishmentService; }
+    public MessageService getMessageService() { return messageService; }
     public String getPluginVersion() { return getDescription().getVersion(); }
 
     @Override
     public void onEnable() {
         log = new LoggerUtils();
+        messageService = new MessageService(log);
         saveDefaultConfig();
         reloadConfig();
         refreshConfigState();
         customItemService = new CustomItemService(this);
-        punishmentService = new PunishmentService(this, customItemService);
+        punishmentService = new PunishmentService(this, customItemService, messageService);
         foliaLib = new FoliaLib(this);
         worldManager = new WorldManager(this);
         new Metrics(this, 24171);
@@ -75,13 +79,13 @@ public final class DeathPunish extends JavaPlugin {
         var deathPunishCommand = new DeathPunishCommand(this, customItemService);
         Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setExecutor(deathPunishCommand);
         Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setTabCompleter(deathPunishCommand);
-        log.info("插件已启用");
+        messageService.info("插件已启用");
         checkForUpdates();
     }
 
     @Override
     public void onDisable() {
-        if (log != null) log.info("插件已禁用");
+        if (messageService != null) messageService.info("插件已禁用");
     }
 
     public void registerCustomRecipes() {
@@ -100,7 +104,7 @@ public final class DeathPunish extends JavaPlugin {
         var configVersion = currentConfig.version();
         var pluginVersion = getPluginVersion();
         if (!pluginVersion.equalsIgnoreCase(configVersion == null ? "" : configVersion)) {
-            log.warn("配置文件版本为 " + configVersion + "，插件版本为 " + pluginVersion + "，建议同步更新配置");
+            messageService.warn("配置文件版本为 " + configVersion + "，插件版本为 " + pluginVersion + "，建议同步更新配置");
         }
     }
 
@@ -115,9 +119,9 @@ public final class DeathPunish extends JavaPlugin {
         }
         if (result) {
             enableEco = true;
-            log.info("经济内容已启动");
+            messageService.info("经济内容已启动");
         } else {
-            log.err("未检测到Vault，经济相关功能无法使用");
+            messageService.error("未检测到Vault，经济相关功能无法使用");
         }
     }
 
@@ -145,25 +149,25 @@ public final class DeathPunish extends JavaPlugin {
                         String pluginVersion = getPluginVersion();
                         int compareResult = compareVersion(latestVersion, pluginVersion);
                         if (compareResult > 0) {
-                            log.info("检测到新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新");
+                            messageService.info("检测到新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新");
                             DeathPunish.latestVersion = latestVersion;
                             updateAvailable = true;
                             if (info != null && !info.isBlank()) {
-                                log.info("新版本信息: " + info);
+                                messageService.info("新版本信息: " + info);
                             }
                         } else if (compareResult < 0) {
-                            log.info("你正在使用开发版本！v" + pluginVersion);
+                            messageService.info("你正在使用开发版本！v" + pluginVersion);
                         } else {
-                            log.info("当前版本已是最新: v" + pluginVersion);
+                            messageService.info("当前版本已是最新: v" + pluginVersion);
                             DeathPunish.latestVersion = null;
                             updateAvailable = false;
                         }
                     }
                 } else {
-                    log.err("获取最新版本失败: " + responseCode);
+                    messageService.error("获取最新版本失败: " + responseCode);
                 }
             } catch (IOException | org.json.simple.parser.ParseException e) {
-                log.err("获取最新版本时发生异常: " + e.getMessage());
+                messageService.error("获取最新版本时发生异常: " + e.getMessage());
             }
         });
     }

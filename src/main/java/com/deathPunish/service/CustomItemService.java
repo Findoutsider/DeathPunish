@@ -24,9 +24,11 @@ public class CustomItemService {
     public static final NamespacedKey HEAL_RECIPE_KEY = new NamespacedKey("deathpunish", "heal");
 
     private final DeathPunish plugin;
+    private final MessageService messageService;
 
     public CustomItemService(DeathPunish plugin) {
         this.plugin = plugin;
+        this.messageService = plugin.getMessageService();
     }
 
     public ShapedRecipe createHealRecipe() {
@@ -106,7 +108,7 @@ public class CustomItemService {
 
         AttributeInstance maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealthAttribute == null) {
-            DeathPunish.log.err("无法读取玩家 " + player.getName() + " 的最大生命值属性");
+            messageService.error("无法读取玩家 " + player.getName() + " 的最大生命值属性");
             return false;
         }
 
@@ -125,7 +127,7 @@ public class CustomItemService {
             applyPotionEffect(player, effect);
         }
 
-        DeathPunish.log.info("玩家 " + player.getName() + " 通过 " + healItem.name() + " 恢复了生命上限，当前生命上限：" + newMaxHealth);
+        messageService.info("玩家 " + player.getName() + " 通过 " + healItem.name() + " 恢复了生命上限，当前生命上限：" + newMaxHealth);
         return true;
     }
 
@@ -144,12 +146,12 @@ public class CustomItemService {
     private void applyPotionEffect(Player player, String effect) {
         String[] parts = effect.split(" ");
         if (parts.length != 3) {
-            DeathPunish.log.warn("无效的药水配置: " + effect);
+            messageService.warn("无效的药水配置: " + effect);
             return;
         }
         PotionEffectType type = PotionEffectType.getByKey(NamespacedKey.minecraft(parts[0]));
         if (type == null) {
-            DeathPunish.log.warn("无效的药水效果: " + parts[0]);
+            messageService.warn("无效的药水效果: " + parts[0]);
             return;
         }
         try {
@@ -157,7 +159,7 @@ public class CustomItemService {
             int amplifier = Integer.parseInt(parts[2]);
             player.addPotionEffect(new PotionEffect(type, duration, amplifier));
         } catch (NumberFormatException ex) {
-            DeathPunish.log.warn("无效的药水时长或等级: " + effect);
+            messageService.warn("无效的药水时长或等级: " + effect);
         }
     }
 

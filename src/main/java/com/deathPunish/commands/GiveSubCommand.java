@@ -15,29 +15,29 @@ public class GiveSubCommand implements SubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (args.length < 3 || args.length > 4) {
-            sender.sendMessage("/deathpunish give <player> <heal|protect|ender> [amount]");
+            context.messageService().error(sender, "用法: /deathpunish give <player> <heal|protect|ender> [amount]");
             return false;
         }
 
         var target = Bukkit.getPlayer(args[1]);
         Integer amount = args.length == 4 ? parsePositiveInt(args[3]) : 1;
         if (target == null) {
-            sender.sendMessage("[DeathPunish] §c找不到玩家 " + args[1]);
+            context.messageService().error(sender, "找不到玩家 " + args[1]);
             return false;
         }
         if (amount == null) {
-            sender.sendMessage("[DeathPunish] §c数量必须为正整数");
+            context.messageService().error(sender, "数量必须为正整数");
             return false;
         }
 
         String itemPath = context.customItemService().resolveItemPath(args[2]);
         if (itemPath == null) {
-            sender.sendMessage("[DeathPunish] §c未知物品类型，可用值: heal, protect, ender");
+            context.messageService().error(sender, "未知物品类型，可用值: heal, protect, ender");
             return false;
         }
 
         target.getInventory().addItem(context.customItemService().createConfiguredItem(itemPath, amount));
-        sender.sendMessage("[DeathPunish] §a已给予玩家 " + target.getName() + " " + amount + " 个物品");
+        context.messageService().info(sender, "已给予玩家 " + target.getName() + " " + amount + " 个物品");
         return true;
     }
 

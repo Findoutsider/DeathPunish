@@ -14,10 +14,10 @@ public class HelpSubCommand implements SubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player && sender.isOp()) && !(sender instanceof ConsoleCommandSender)) {
-            sender.sendMessage("§c你的权限不足！");
+            context.messageService().error(sender, "你的权限不足！");
             return false;
         }
-        sender.sendMessage("DeathPunish v" + context.plugin().getDescription().getVersion());
+        context.messageService().info(sender, "DeathPunish v" + context.plugin().getDescription().getVersion());
         sender.sendMessage("§c[§f死亡惩罚插件指令帮助§c]");
         sender.sendMessage("§c可使用 dp 替换 deathpunish");
         sender.sendMessage("§c/deathpunish §fhelp§7: 显示帮助页面");

@@ -4,19 +4,19 @@ import com.deathPunish.DeathPunish;
 import org.bukkit.command.CommandSender;
 
 public class ReloadSubCommand implements SubCommand {
-    private final DeathPunish plugin;
+    private final CommandContext context;
 
-    public ReloadSubCommand(DeathPunish plugin) {
-        this.plugin = plugin;
+    public ReloadSubCommand(CommandContext context) {
+        this.context = context;
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-        plugin.reloadConfig();
-        plugin.refreshConfigState();
+        context.plugin().reloadConfig();
+        context.plugin().refreshConfigState();
         DeathPunish.getWorldManger().setWorldRule();
-        plugin.registerCustomRecipes();
-        sender.sendMessage("[DeathPunish] §a插件已重载");
+        context.plugin().registerCustomRecipes();
+        context.messageService().info(sender, "插件已重载");
         return true;
     }
 }

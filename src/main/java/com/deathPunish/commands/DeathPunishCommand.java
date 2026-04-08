@@ -18,14 +18,14 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
     private final Map<String, SubCommand> subCommands = new LinkedHashMap<>();
 
     public DeathPunishCommand(DeathPunish plugin, CustomItemService customItemService) {
-        var context = new CommandContext(plugin, customItemService);
+        var context = new CommandContext(plugin, customItemService, plugin.getMessageService());
         this.helpSubCommand = new HelpSubCommand(context);
         subCommands.put("help", helpSubCommand);
         subCommands.put("give", new GiveSubCommand(context));
-        subCommands.put("set", new HealthSubCommand(HealthSubCommand.Mode.SET));
-        subCommands.put("add", new HealthSubCommand(HealthSubCommand.Mode.ADD));
-        subCommands.put("get", new HealthSubCommand(HealthSubCommand.Mode.GET));
-        subCommands.put("reload", new ReloadSubCommand(plugin));
+        subCommands.put("set", new HealthSubCommand(context, HealthSubCommand.Mode.SET));
+        subCommands.put("add", new HealthSubCommand(context, HealthSubCommand.Mode.ADD));
+        subCommands.put("get", new HealthSubCommand(context, HealthSubCommand.Mode.GET));
+        subCommands.put("reload", new ReloadSubCommand(context));
     }
 
     @Override

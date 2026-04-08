@@ -33,11 +33,13 @@ import java.util.stream.Collectors;
 public class PunishmentService {
     private final DeathPunish plugin;
     private final CustomItemService customItemService;
+    private final MessageService messageService;
     private final Map<UUID, PendingPunishment> pendingPunishments = new ConcurrentHashMap<>();
 
-    public PunishmentService(DeathPunish plugin, CustomItemService customItemService) {
+    public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService) {
         this.plugin = plugin;
         this.customItemService = customItemService;
+        this.messageService = messageService;
     }
 
     public void handleDeath(Player player) {
@@ -47,13 +49,13 @@ public class PunishmentService {
         }
         if (player.hasPermission("deathpunish.bypass")) {
             player.sendMessage(Objects.requireNonNull(pluginConfig.skipPunishMsg()));
-            DeathPunish.log.info("玩家 " + player.getName() + " 因为拥有 bypass 权限跳过死亡惩罚");
+            messageService.info("玩家 " + player.getName() + " 因为拥有 bypass 权限跳过死亡惩罚");
             return;
         }
 
         var maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealthAttribute == null) {
-            DeathPunish.log.err("无法读取玩家 " + player.getName() + " 的最大生命值属性");
+            messageService.error("无法读取玩家 " + player.getName() + " 的最大生命值属性");
             return;
         }
 
@@ -63,7 +65,7 @@ public class PunishmentService {
 
         pendingPunishments.put(player.getUniqueId(), new PendingPunishment(maxHealthAttribute.getBaseValue(), player.getFoodLevel()));
         applyImmediatePunishments(player, pluginConfig);
-        DeathPunish.log.info("玩家 " + player.getName() + " 受到了死亡惩罚");
+        messageService.info("玩家 " + player.getName() + " 受到了死亡惩罚");
 
         if (SchedulerUtils.isFolia()) {
             SchedulerUtils.runTaskLater(plugin, () -> applyPendingPunishment(player), 5L);
@@ -144,12 +146,12 @@ public class PunishmentService {
         for (String effect : pluginConfig.debuffPotions()) {
             var parts = effect.split(" ");
             if (parts.length != 3) {
-                DeathPunish.log.warn("无效的药水配置: " + effect);
+                messageService.warn("无效的药水配置: " + effect);
                 continue;
             }
             var type = PotionEffectType.getByKey(NamespacedKey.minecraft(parts[0]));
             if (type == null) {
-                DeathPunish.log.warn("无效的药水效果: " + parts[0]);
+                messageService.warn("无效的药水效果: " + parts[0]);
                 continue;
             }
             try {
@@ -162,14 +164,14 @@ public class PunishmentService {
                     player.addPotionEffect(new PotionEffect(type, duration, amplifier));
                 }
             } catch (NumberFormatException ex) {
-                DeathPunish.log.warn("无效的药水时长或等级: " + effect);
+                messageService.warn("无效的药水时长或等级: " + effect);
             }
         }
     }
 
     private void reduceMoney(Player player, PluginConfig pluginConfig) {
         if (!DeathPunish.enableEco || DeathPunish.econ == null) {
-            DeathPunish.log.warn("未启用经济系统，已跳过玩家 " + player.getName() + " 的扣费惩罚");
+            messageService.warn("未启用经济系统，已跳过玩家 " + player.getName() + " 的扣费惩罚");
             return;
         }
 
@@ -179,7 +181,7 @@ public class PunishmentService {
         } else if (pluginConfig.reduceMoneyMode() == 2 && pluginConfig.reduceMoneyValue() >= 0) {
             amount = pluginConfig.reduceMoneyValue();
         } else {
-            DeathPunish.log.err("punishments.reduceMoneyOnDeath 配置错误，请检查 mode 和 value");
+            messageService.error("punishments.reduceMoneyOnDeath 配置错误，请检查 mode 和 value");
             return;
         }
 
@@ -205,7 +207,7 @@ public class PunishmentService {
                 inventory.setItem(slot, null);
             }
             player.sendMessage(Objects.requireNonNull(pluginConfig.skipPunishMsg()));
-            DeathPunish.log.info("玩家 " + player.getName() + " 因为 " + itemName + " 跳过死亡惩罚");
+            messageService.info("玩家 " + player.getName() + " 因为 " + itemName + " 跳过死亡惩罚");
             return true;
         }
         return false;
