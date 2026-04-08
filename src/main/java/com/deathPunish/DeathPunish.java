@@ -40,7 +40,6 @@ public final class DeathPunish extends JavaPlugin {
     private CustomItemService customItemService;
     private PunishmentService punishmentService;
 
-    public final static String VERSION = "1.4.4";
     public static volatile String latestVersion;
     public static volatile boolean updateAvailable;
     public static Economy econ = null;
@@ -52,6 +51,7 @@ public final class DeathPunish extends JavaPlugin {
     public PluginConfig getPluginConfig() { return pluginConfig; }
     public CustomItemService getCustomItemService() { return customItemService; }
     public PunishmentService getPunishmentService() { return punishmentService; }
+    public String getPluginVersion() { return getDescription().getVersion(); }
 
     @Override
     public void onEnable() {
@@ -98,8 +98,9 @@ public final class DeathPunish extends JavaPlugin {
 
     private void warnIfConfigOutdated(PluginConfig currentConfig) {
         var configVersion = currentConfig.version();
-        if (!VERSION.equalsIgnoreCase(configVersion == null ? "" : configVersion)) {
-            log.warn("配置文件版本为 " + configVersion + "，插件版本为 " + VERSION + "，建议同步更新配置");
+        var pluginVersion = getPluginVersion();
+        if (!pluginVersion.equalsIgnoreCase(configVersion == null ? "" : configVersion)) {
+            log.warn("配置文件版本为 " + configVersion + "，插件版本为 " + pluginVersion + "，建议同步更新配置");
         }
     }
 
@@ -133,7 +134,7 @@ public final class DeathPunish extends JavaPlugin {
                 connection.setConnectTimeout(5000);
                 connection.setReadTimeout(5000);
                 connection.setRequestProperty("Accept", "application/vnd.github+json");
-                connection.setRequestProperty("User-Agent", "DeathPunish/" + VERSION);
+                connection.setRequestProperty("User-Agent", "DeathPunish/" + getPluginVersion());
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -141,7 +142,8 @@ public final class DeathPunish extends JavaPlugin {
                     String latestVersion = (String) jsonObject.get("tag_name");
                     String info = (String) jsonObject.get("body");
                     if (latestVersion != null) {
-                        int compareResult = compareVersion(latestVersion, VERSION);
+                        String pluginVersion = getPluginVersion();
+                        int compareResult = compareVersion(latestVersion, pluginVersion);
                         if (compareResult > 0) {
                             log.info("检测到新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新");
                             DeathPunish.latestVersion = latestVersion;
@@ -150,9 +152,9 @@ public final class DeathPunish extends JavaPlugin {
                                 log.info("新版本信息: " + info);
                             }
                         } else if (compareResult < 0) {
-                            log.info("你正在使用开发版本！v" + VERSION);
+                            log.info("你正在使用开发版本！v" + pluginVersion);
                         } else {
-                            log.info("当前版本已是最新: v" + VERSION);
+                            log.info("当前版本已是最新: v" + pluginVersion);
                             DeathPunish.latestVersion = null;
                             updateAvailable = false;
                         }

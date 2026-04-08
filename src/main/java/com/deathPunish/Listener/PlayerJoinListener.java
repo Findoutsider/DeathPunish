@@ -19,7 +19,7 @@ public class PlayerJoinListener implements Listener {
         var player = event.getPlayer();
         if (player.isOp()) {
             player.sendMessage("");
-            player.sendMessage("[deathpunish] §a当前插件版本为" + VERSION);
+            player.sendMessage("[deathpunish] §a当前插件版本为" + plugin.getPluginVersion());
             player.sendMessage("[deathpunish] §a配置文件版本为" + plugin.getPluginConfig().version());
             player.sendMessage("[deathpunish] §a若二者版本不同，请按最新配置模板检查并补齐配置项");
             player.sendMessage("[deathpunish] §a前往 https://github.com/Findoutsider/DeathPunish 获取更新");
