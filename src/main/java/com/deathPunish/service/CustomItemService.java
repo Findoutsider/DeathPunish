@@ -1,11 +1,11 @@
 package com.deathPunish.service;
 
 import com.deathPunish.DeathPunish;
+import com.deathPunish.config.PluginConfig;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -14,7 +14,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -31,14 +30,10 @@ public class CustomItemService {
     }
 
     public ShapedRecipe createHealRecipe() {
-        var config = plugin.getConfig();
-        String materialItem = config.getString(HEAL_ITEM_PATH + ".material", "ENCHANTED_GOLDEN_APPLE");
-        String displayName = colorize(config.getString(HEAL_ITEM_PATH + ".name", "&6生命果实"));
-        List<String> lore = colorize(config.getStringList(HEAL_ITEM_PATH + ".lore"));
-        String shape1 = config.getString(HEAL_ITEM_PATH + ".shape1", "yxy");
-        String shape2 = config.getString(HEAL_ITEM_PATH + ".shape2", "xbx");
-        String shape3 = config.getString(HEAL_ITEM_PATH + ".shape3", "yxy");
-        Map<String, Object> ingredients = Objects.requireNonNull(config.getConfigurationSection(HEAL_ITEM_PATH + ".ingredients")).getValues(false);
+        var healItem = plugin.getPluginConfig().healItem();
+        String materialItem = healItem.material();
+        String displayName = colorize(healItem.name());
+        List<String> lore = colorize(healItem.lore());
 
         ItemStack item = new ItemStack(Objects.requireNonNull(Material.matchMaterial(materialItem)));
         ItemMeta meta = item.getItemMeta();
@@ -46,9 +41,13 @@ public class CustomItemService {
         meta.setLore(lore);
         item.setItemMeta(meta);
 
-        var recipe = new ShapedRecipe(HEAL_RECIPE_KEY, item).shape(shape1, shape2, shape3);
-        for (Map.Entry<String, Object> entry : ingredients.entrySet()) {
-            Material material = Material.matchMaterial((String) entry.getValue());
+        var recipe = new ShapedRecipe(HEAL_RECIPE_KEY, item).shape(
+                healItem.shape().get(0),
+                healItem.shape().get(1),
+                healItem.shape().get(2)
+        );
+        for (var entry : healItem.ingredients().entrySet()) {
+            Material material = Material.matchMaterial(entry.getValue());
             if (material != null) {
                 recipe.setIngredient(entry.getKey().charAt(0), material);
             }
@@ -57,12 +56,12 @@ public class CustomItemService {
     }
 
     public ItemStack createConfiguredItem(String configPath, int amount) {
-        var config = plugin.getConfig();
-        var material = Objects.requireNonNull(Material.matchMaterial(Objects.requireNonNull(config.getString(configPath + ".material"))));
+        var itemConfig = getItemConfig(configPath);
+        var material = Objects.requireNonNull(Material.matchMaterial(itemConfig.material()));
         var item = new ItemStack(material, amount);
         var meta = item.getItemMeta();
-        meta.setDisplayName(colorize(config.getString(configPath + ".name", "")));
-        meta.setLore(colorize(config.getStringList(configPath + ".lore")));
+        meta.setDisplayName(colorize(itemConfig.name()));
+        meta.setLore(colorize(itemConfig.lore()));
         item.setItemMeta(meta);
         return item;
     }
@@ -71,13 +70,13 @@ public class CustomItemService {
         if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
             return false;
         }
-        var config = plugin.getConfig();
-        var expectedMaterial = Material.matchMaterial(config.getString(configPath + ".material", ""));
+        var itemConfig = getItemConfig(configPath);
+        var expectedMaterial = Material.matchMaterial(itemConfig.material());
         var meta = item.getItemMeta();
         if (expectedMaterial == null || meta == null || !meta.hasDisplayName()) {
             return false;
         }
-        return item.getType() == expectedMaterial && colorize(config.getString(configPath + ".name", "")).equals(meta.getDisplayName());
+        return item.getType() == expectedMaterial && colorize(itemConfig.name()).equals(meta.getDisplayName());
     }
 
     public String resolveItemPath(String input) {
@@ -86,13 +85,13 @@ public class CustomItemService {
             case "protect" -> PROTECT_ITEM_PATH;
             case "ender", "ender_protect", "enderprotect" -> ENDER_PROTECT_ITEM_PATH;
             default -> {
-                if (input.equalsIgnoreCase(Objects.requireNonNull(plugin.getConfig().getString(HEAL_ITEM_PATH + ".name")))) {
+                if (input.equalsIgnoreCase(plugin.getPluginConfig().healItem().name())) {
                     yield HEAL_ITEM_PATH;
                 }
-                if (input.equalsIgnoreCase(Objects.requireNonNull(plugin.getConfig().getString(PROTECT_ITEM_PATH + ".name")))) {
+                if (input.equalsIgnoreCase(plugin.getPluginConfig().protectItem().name())) {
                     yield PROTECT_ITEM_PATH;
                 }
-                if (input.equalsIgnoreCase(Objects.requireNonNull(plugin.getConfig().getString(ENDER_PROTECT_ITEM_PATH + ".name")))) {
+                if (input.equalsIgnoreCase(plugin.getPluginConfig().enderProtectItem().name())) {
                     yield ENDER_PROTECT_ITEM_PATH;
                 }
                 yield null;
@@ -111,25 +110,35 @@ public class CustomItemService {
             return false;
         }
 
-        var config = plugin.getConfig();
+        var healItem = plugin.getPluginConfig().healItem();
         double currentMaxHealth = maxHealthAttribute.getBaseValue();
-        double healAmount = config.getDouble(HEAL_ITEM_PATH + ".heal_amount");
-        double maxHealthCap = config.getDouble(HEAL_ITEM_PATH + ".maxHealth");
-        double newMaxHealth = Math.min(currentMaxHealth + healAmount, maxHealthCap);
+        double newMaxHealth = Math.min(currentMaxHealth + healItem.healAmount(), healItem.maxHealth());
 
         maxHealthAttribute.setBaseValue(newMaxHealth);
         player.setHealth(newMaxHealth);
         player.setFoodLevel(20);
-        player.sendMessage(Objects.requireNonNull(currentMaxHealth + healAmount > maxHealthCap
-                ? config.getString(HEAL_ITEM_PATH + ".eatWithoutHealMsg")
-                : config.getString(HEAL_ITEM_PATH + ".eatMsg")));
+        player.sendMessage(Objects.requireNonNull(currentMaxHealth + healItem.healAmount() > healItem.maxHealth()
+                ? healItem.eatWithoutHealMsg()
+                : healItem.eatMsg()));
 
-        for (String effect : config.getStringList(HEAL_ITEM_PATH + ".potion_effects")) {
+        for (String effect : healItem.potionEffects()) {
             applyPotionEffect(player, effect);
         }
 
-        DeathPunish.log.info("玩家 " + player.getName() + " 通过 " + config.getString(HEAL_ITEM_PATH + ".name") + " 恢复了生命上限，当前生命上限：" + newMaxHealth);
+        DeathPunish.log.info("玩家 " + player.getName() + " 通过 " + healItem.name() + " 恢复了生命上限，当前生命上限：" + newMaxHealth);
         return true;
+    }
+
+    private PluginConfig.ItemConfig getItemConfig(String configPath) {
+        return switch (configPath) {
+            case PROTECT_ITEM_PATH -> plugin.getPluginConfig().protectItem();
+            case ENDER_PROTECT_ITEM_PATH -> plugin.getPluginConfig().enderProtectItem();
+            case HEAL_ITEM_PATH -> {
+                var healItem = plugin.getPluginConfig().healItem();
+                yield new PluginConfig.ItemConfig(healItem.name(), healItem.material(), healItem.lore());
+            }
+            default -> throw new IllegalArgumentException("未知物品配置路径: " + configPath);
+        };
     }
 
     private void applyPotionEffect(Player player, String effect) {
