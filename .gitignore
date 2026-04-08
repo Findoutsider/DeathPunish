@@ -2,3 +2,4 @@
 /.idea
 /out
 dependency-reduced-pom.xml
+.spec-workflow/

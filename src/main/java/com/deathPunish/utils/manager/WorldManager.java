@@ -4,13 +4,9 @@ import com.deathPunish.DeathPunish;
 import com.deathPunish.utils.SchedulerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
-import org.bukkit.configuration.file.FileConfiguration;
-
 import java.util.List;
-import java.util.Objects;
 
 import static com.deathPunish.DeathPunish.log;
-import static com.deathPunish.utils.manager.ConfigManager.*;
 
 public class WorldManager {
     private final DeathPunish pl;
@@ -22,22 +18,28 @@ public class WorldManager {
 
     public void setWorldRule() {
         SchedulerUtils.runTask(pl, () -> {
-            List<String> worlds = enableWorlds;
-            // 死亡不掉落
-            if (enableDeathPunish) {
+            var pluginConfig = pl.getPluginConfig();
+            List<String> worlds = pluginConfig.enableWorlds();
+            if (pluginConfig.enableDeathPunish()) {
                 for (String world : worlds) {
-                    Objects.requireNonNull(Bukkit.getWorld(world)).setGameRule(GameRule.KEEP_INVENTORY, autoSetRule);
-                    log.warn("发现启用死亡惩罚的世界未开启死亡不掉落");
-                    log.warn("已自动设置世界 " + world + " 的游戏规则为" + autoSetRule);
+                    var bukkitWorld = Bukkit.getWorld(world);
+                    if (bukkitWorld == null) {
+                        log.warn("未找到世界 " + world + "，已跳过规则设置");
+                        continue;
+                    }
+                    bukkitWorld.setGameRule(GameRule.KEEP_INVENTORY, pluginConfig.autoSetRule());
+                    log.info("已设置世界 " + world + " 的 KEEP_INVENTORY=" + pluginConfig.autoSetRule());
                 }
             }
-            // 立即重生
-            boolean y = SchedulerUtils.isFolia() || doImmediateRespawn;
-            if (enableDeathPunish) {
+            boolean immediateRespawn = SchedulerUtils.isFolia() || pluginConfig.doImmediateRespawn();
+            if (pluginConfig.enableDeathPunish()) {
                 for (String world : worlds) {
-                    Objects.requireNonNull(Bukkit.getWorld(world)).setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, y);
-                    log.warn("发现启用死亡惩罚的世界未开启立即重生");
-                    log.warn("已自动设置世界 " + world + " 的游戏规则为" + y);
+                    var bukkitWorld = Bukkit.getWorld(world);
+                    if (bukkitWorld == null) {
+                        continue;
+                    }
+                    bukkitWorld.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, immediateRespawn);
+                    log.info("已设置世界 " + world + " 的 DO_IMMEDIATE_RESPAWN=" + immediateRespawn);
                 }
             }
         });

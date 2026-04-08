@@ -1,16 +1,19 @@
 package com.deathPunish;
 
+import com.deathPunish.config.PluginConfig;
+import com.deathPunish.Listener.EatCustomItemListener;
 import com.deathPunish.Listener.PlayerDeathListener;
+import com.deathPunish.Listener.PlayerInteractListener;
+import com.deathPunish.Listener.PlayerJoinListener;
+import com.deathPunish.service.CustomItemService;
+import com.deathPunish.service.PunishmentService;
 import com.deathPunish.utils.LoggerUtils;
 import com.deathPunish.utils.Metrics;
 import com.deathPunish.utils.SchedulerUtils;
-import com.deathPunish.utils.manager.CustomItems;
 import com.deathPunish.utils.manager.WorldManager;
 import com.deathPunish.commands.DeathPunishCommand;
 import com.tcoded.folialib.FoliaLib;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -20,14 +23,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
-
-import static com.deathPunish.utils.manager.ConfigManager.getAllConfigs;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public final class DeathPunish extends JavaPlugin {
 
@@ -35,43 +36,45 @@ public final class DeathPunish extends JavaPlugin {
     private static WorldManager worldManager;
     public static FileConfiguration config;
     public static LoggerUtils log;
+    private PluginConfig pluginConfig;
+    private CustomItemService customItemService;
+    private PunishmentService punishmentService;
 
     public final static String VERSION = "1.4.4";
-    public static Map<Boolean, String> ifNeedUpdate = new HashMap<>();;
+    public static volatile String latestVersion;
+    public static volatile boolean updateAvailable;
     public static Economy econ = null;
     public static boolean enableEco = false;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 
     public static FoliaLib getFoliaLib() { return foliaLib; }
     public static WorldManager getWorldManger() { return worldManager; }
+    public PluginConfig getPluginConfig() { return pluginConfig; }
+    public CustomItemService getCustomItemService() { return customItemService; }
+    public PunishmentService getPunishmentService() { return punishmentService; }
 
     @Override
     public void onEnable() {
-        // 初始化
         log = new LoggerUtils();
-        config = getConfig();
-        getAllConfigs();
+        saveDefaultConfig();
+        reloadConfig();
+        refreshConfigState();
+        customItemService = new CustomItemService(this);
+        punishmentService = new PunishmentService(this, customItemService);
         foliaLib = new FoliaLib(this);
         worldManager = new WorldManager(this);
-
-        // stats
         new Metrics(this, 24171);
         setupEconomy();
+        registerCustomRecipes();
 
-        // 保存默认配置文件
-        saveDefaultConfig();
+        getServer().getPluginManager().registerEvents(new PlayerDeathListener(punishmentService), this);
+        getServer().getPluginManager().registerEvents(new EatCustomItemListener(customItemService), this);
+        getServer().getPluginManager().registerEvents(new PlayerInteractListener(customItemService), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
 
-        // 注册自定义物品配方
-        registerCustomRecipes(config);
-
-        // 注册事件监听器
-        getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
-        getServer().getPluginManager().registerEvents(new com.deathPunish.Listener.EatCustomItemListener(), this);
-
-
-        // 注册命令
-        this.getCommand("deathpunish").setExecutor(new DeathPunishCommand(this));
-        this.getCommand("deathpunish").setTabCompleter(new DeathPunishCommand(this));
+        var deathPunishCommand = new DeathPunishCommand(this, customItemService);
+        Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setExecutor(deathPunishCommand);
+        Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setTabCompleter(deathPunishCommand);
         log.info("插件已启用");
         checkForUpdates();
     }
@@ -81,53 +84,22 @@ public final class DeathPunish extends JavaPlugin {
         if (log != null) log.info("插件已禁用");
     }
 
-    public void registerCustomRecipes(FileConfiguration config) {
-        enchantedGoldenAppleRecipe = CustomItems.createEnchantedGoldenApple(config);
-        if (!SchedulerUtils.isFolia()) getServer().resetRecipes(); // 重置配方
-        
-        // 检查配方是否已经存在
-        boolean recipeExists = false;
-        for (org.bukkit.inventory.Recipe recipe : getServer().getRecipesFor(enchantedGoldenAppleRecipe.getResult())) {
-            if (recipe instanceof ShapedRecipe && 
-                ((ShapedRecipe) recipe).getKey().equals(enchantedGoldenAppleRecipe.getKey())) {
-                recipeExists = true;
-                break;
-            }
-        }
-        
-        // 如果配方不存在，则添加
-        if (!recipeExists) {
-            getServer().addRecipe(enchantedGoldenAppleRecipe);
-        }
+    public void registerCustomRecipes() {
+        enchantedGoldenAppleRecipe = customItemService.createHealRecipe();
+        getServer().removeRecipe(enchantedGoldenAppleRecipe.getKey());
+        getServer().addRecipe(enchantedGoldenAppleRecipe);
     }
 
-    @Override
-    public void saveDefaultConfig() {
-        File configFile = new File(getDataFolder(), "config.yml");
+    public void refreshConfigState() {
+        config = getConfig();
+        pluginConfig = PluginConfig.from(config);
+        warnIfConfigOutdated(pluginConfig);
+    }
 
-        // 检查配置文件是否存在
-        if (!configFile.exists()) {
-            // 如果文件不存在，写入默认配置
-            getConfig().options().copyDefaults(true);
-            saveConfig();
-        } else {
-            // 如果文件存在，检查版本
-            try {
-                FileConfiguration config = getConfig();
-                // 检查配置文件的版本
-                if (!Objects.requireNonNull(config.getString("version")).equalsIgnoreCase(VERSION)) {
-                    configFile.delete();
-                    getConfig().options().copyDefaults(true);
-                    saveConfig();
-//                    log.info("[DeathPunish] §a已更新配置文件至 v" + VERSION);
-                }
-            } catch (Exception e) {
-                // 如果配置文件读取失败，删除文件并写入默认配置
-                configFile.delete();
-                getConfig().options().copyDefaults(true);
-                saveConfig();
-                log.err("配置文件读取失败，已恢复默认配置");
-            }
+    private void warnIfConfigOutdated(PluginConfig currentConfig) {
+        var configVersion = currentConfig.version();
+        if (!VERSION.equalsIgnoreCase(configVersion == null ? "" : configVersion)) {
+            log.warn("配置文件版本为 " + configVersion + "，插件版本为 " + VERSION + "，建议同步更新配置");
         }
     }
 
@@ -158,6 +130,10 @@ public final class DeathPunish extends JavaPlugin {
                 URL url = new URL("https://api.github.com/repos/Findoutsider/DeathPunish/releases/latest");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+                connection.setRequestProperty("Accept", "application/vnd.github+json");
+                connection.setRequestProperty("User-Agent", "DeathPunish/" + VERSION);
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -165,34 +141,33 @@ public final class DeathPunish extends JavaPlugin {
                     String latestVersion = (String) jsonObject.get("tag_name");
                     String info = (String) jsonObject.get("body");
                     if (latestVersion != null) {
-                        int latestVersionInt = Integer.parseInt(latestVersion.replace("v", "").replace(".", ""));
-                        int currentVersion = Integer.parseInt(VERSION.replace(".", ""));
-                        if (latestVersionInt > currentVersion) {
+                        int compareResult = compareVersion(latestVersion, VERSION);
+                        if (compareResult > 0) {
                             log.info("检测到新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新");
-
-                            ifNeedUpdate.put(true, latestVersion);
-
-                            if (!info.equalsIgnoreCase("")) {
+                            DeathPunish.latestVersion = latestVersion;
+                            updateAvailable = true;
+                            if (info != null && !info.isBlank()) {
                                 log.info("新版本信息: " + info);
                             }
-                        } else if (latestVersionInt < currentVersion) {
+                        } else if (compareResult < 0) {
                             log.info("你正在使用开发版本！v" + VERSION);
                         } else {
                             log.info("当前版本已是最新: v" + VERSION);
-                            ifNeedUpdate.put(false, null);
+                            DeathPunish.latestVersion = null;
+                            updateAvailable = false;
                         }
                     }
                 } else {
                     log.err("获取最新版本失败: " + responseCode);
                 }
             } catch (IOException | org.json.simple.parser.ParseException e) {
-                log.err("获取最新版本时发生异常: " + e.getMessage() + Arrays.toString(e.getStackTrace()));
+                log.err("获取最新版本时发生异常: " + e.getMessage());
             }
         });
     }
 
     private static JSONObject getJsonObject(HttpURLConnection connection) throws IOException, org.json.simple.parser.ParseException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
         String inputLine;
         StringBuilder content = new StringBuilder();
         while ((inputLine = in.readLine()) != null) {
@@ -202,6 +177,24 @@ public final class DeathPunish extends JavaPlugin {
 
         JSONParser parser = new JSONParser();
         return (JSONObject) parser.parse(content.toString());
+    }
+
+    private static int compareVersion(String left, String right) {
+        var leftParts = normalizeVersion(left).split("\\.");
+        var rightParts = normalizeVersion(right).split("\\.");
+        var maxLength = Math.max(leftParts.length, rightParts.length);
+        for (int i = 0; i < maxLength; i++) {
+            var leftValue = i < leftParts.length ? Integer.parseInt(leftParts[i]) : 0;
+            var rightValue = i < rightParts.length ? Integer.parseInt(rightParts[i]) : 0;
+            if (leftValue != rightValue) {
+                return Integer.compare(leftValue, rightValue);
+            }
+        }
+        return 0;
+    }
+
+    private static String normalizeVersion(String version) {
+        return version.replaceFirst("^[vV]", "");
     }
 
 }

@@ -4,57 +4,13 @@ version: 1.4.4
 api-version: 1.13
 folia-supported: true
 softdepend: [Vault]
+
 commands:
   deathpunish:
     description: 死亡惩罚
-    usage: /deathpunish
+    usage: /deathpunish <help|give|set|add|get|reload>
     aliases:
       - dp
-  set:
-    #描述这个命令
-    description: 设置玩家最大生命值
-    #用法
-    usage: /deathpunish set <player> <maxhealth> <true/false>
-    #执行此命令的人所需的权限
-    permission: op
-    #没有权限的提示消息
-    permission-message: 你没有权限！
-  add:
-    #描述这个命令
-    description:
-    #用法
-    usage: /deathpunish add <player> <amount>
-    #执行此命令的人所需的权限
-    permission: op
-    #没有权限的提示消息
-    permission-message: 你没有权限！
-  get:
-    #描述这个命令
-    description:
-    #用法
-    usage: /deathpunish get <player>
-    #执行此命令的人所需的权限
-    permission: op
-    #没有权限的提示消息
-    permission-message: 你没有权限！
-  give:
-    #描述这个命令
-    description:
-    #用法
-    usage: /deathpunish give <player> <amount>
-    #执行此命令的人所需的权限
-    permission: op
-    #没有权限的提示消息
-    permission-message: 你没有权限！
-  reload:
-    #描述这个命令
-    description: 重载插件配置
-    #用法
-    usage: /deathpunish reload
-    #执行此命令的人所需的权限
-    permission: op
-    #没有权限的提示消息
-    permission-message: 你没有权限！
 
 permissions:
   deathpunish.command:
