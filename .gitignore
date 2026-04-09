@@ -1,5 +1,8 @@
 /target
+/test
+/docs
 /.idea
 /out
+/tmp-wg
 dependency-reduced-pom.xml
 .spec-workflow/

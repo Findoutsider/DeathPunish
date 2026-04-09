@@ -1,30 +1,120 @@
-# 支持paper1.13-1.21的死亡惩罚插件
+# DeathPunish
 
-***
+DeathPunish - 死亡惩罚插件，适合用于生存、RPG 或高风险玩法服务器。它可以在玩家死亡后扣除生命上限、清理物品、施加减益、生成墓碑，并提供保护符、豁免区域等配套机制。
 
-画饼：支持1.21.11、26.1以及后续版本
-~1.21.11好像还是能用？~
+## 支持环境
 
-***
+- 服务端核心：Paper 1.13 - 1.21.11
+- Java：17
+- 可选依赖：
+  - Vault：启用金钱惩罚
+  - WorldGuard：启用WorldGuard区域豁免
 
-目前功能如下：
+## 主要功能
 
-+ *死亡扣除血量上限
-+ 设置死亡扣除多少血量
-+ *死亡清除背包、末影箱、经验值、金钱...
-+ *玩家血量为1时死亡自动封禁
-+ *死亡在原地生成一个墓碑，并带有墓志铭
-+ 设置，增加，获取玩家当前血量上限
-+ 用于恢复血量上限的生命果实，可自定义材料、配方、名称、回复量、额外效果等
-+ 用于免除死亡惩罚的物品
-+ 玩家免除死亡惩罚时，在控制台报告免除原因
-+ 设置启用死亡惩罚的世界
-+ 自动为启用死亡惩罚的世界开启死亡不掉落，以防止功能异常
+- 死亡后扣除生命上限，并支持设置扣除数值
+- 死亡后清除背包、末影箱、经验、金钱
+- 玩家生命上限降到 1 时可自动封禁
+- 死亡原地生成墓碑与墓志铭
+- 提供生命果实，用于恢复生命上限
+- 提供保护符和末影保护符，用于免除死亡惩罚
+- 支持指定世界启用惩罚
+- 支持按世界、坐标范围、WorldGuard区域设置豁免
 
-**标*内容可开关**
+## 快速开始
+
+1. 将插件放入 `plugins` 目录并启动服务器。
+2. 首次启动后关闭服务器，编辑 `plugins/DeathPunish/config.yml`。
+3. 至少检查以下配置：
+   - `punishOnDeath.enable`
+   - `punishments.reduceMaxHealthOnDeath`
+   - `punishments.reduceHealthAmount`
+   - `punishments.exemption`
+4. 重新启动服务器，或使用 `/deathpunish reload` 重载配置。
+
+## 常用配置说明
+
+### 1. 总开关
+
+```yml
+punishOnDeath:
+  enable: true
+```
+
+开启后，所有世界默认都会启用死亡惩罚。想排除某些世界时，请使用 `punishments.exemption.world`。
+
+### 2. 生命惩罚
+
+```yml
+punishments:
+  reduceMaxHealthOnDeath: true
+  reduceHealthAmount: 2
+  minHealth: 1.0
+```
+
+开启后，玩家每次死亡会减少指定的生命上限，且不会低于 `minHealth`。
+
+### 3. 豁免区域
+
+```yml
+punishments:
+  exemption:
+    world:
+      - "world_the_end"
+    coordinate:
+      - "0 0 0 100 world"
+    worldguard_region:
+      - "spawn"
+```
+
+- `world`：整个世界豁免
+- `coordinate`：指定坐标半径内豁免，格式为 `x y z radius world`
+- `worldguard_region`：指定 WorldGuard 区域豁免
+
+### 4. 跳过惩罚消息
+
+```yml
+punishments:
+  skipPunishMsg: "§a你逃过了死亡惩罚！"
+  bypassMsg: "§a你拥有 bypass 权限，已跳过死亡惩罚！"
+  exemptionMsg: "§a你位于豁免区域，已跳过死亡惩罚！"
+  protectItemMsg: "§a保护符生效，你逃过了死亡惩罚！"
+  enderProtectItemMsg: "§a末影保护符生效，你逃过了死亡惩罚！"
+```
+
+不同的跳过来源可以分别设置提示消息。
+
+## 命令
+
+- `/deathpunish help`
+- `/deathpunish reload`
+- `/deathpunish give`
+- `/deathpunish set`
+- `/deathpunish add`
+- `/deathpunish get`
+
+别名：
+
+- `/dp`
 
 ## 权限
-+ `deathpunish.command` 使用deathpunish所有命令，默认op拥有该权限
-+ `deathpunish.bypass` 绕过死亡惩罚 
-+ `deathpunish.craft` 允许制作回血物品
-+ `deathpunish.protect` 允许使用死亡保护物品
+
+- `deathpunish.command`
+  - 使用 DeathPunish 管理命令
+  - 默认：`op`
+- `deathpunish.bypass`
+  - 跳过死亡惩罚
+  - 默认：`false`
+- `deathpunish.craft`
+  - 允许制作生命果实
+  - 默认：`true`
+- `deathpunish.protect`
+  - 允许使用死亡保护物品
+  - 默认：`true`
+
+## 说明与注意事项
+
+- 如果未安装 Vault，金钱惩罚不会生效。
+- 如果未安装 WorldGuard，`worldguard_region` 豁免不会生效。
+- 如果未配置跳过提示消息，会自动使用 `skipPunishMsg`。
+- 本版本为 `1.5.0-SNAPSHOT`，功能仍在继续补充和调整。

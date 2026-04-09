@@ -47,7 +47,7 @@ public class PunishmentService {
 
     public void handleDeath(Player player) {
         var pluginConfig = plugin.getPluginConfig();
-        if (!pluginConfig.enableDeathPunish() || !pluginConfig.enableWorlds().contains(player.getWorld().getName())) {
+        if (!pluginConfig.enableDeathPunish()) {
             return;
         }
         if (player.hasPermission("deathpunish.bypass")) {
@@ -137,7 +137,7 @@ public class PunishmentService {
 
         var maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealthAttribute != null && pluginConfig.reduceMaxHealthOnDeath()) {
-            double newMaxHealth = Math.max(pending.maxHealth() - pluginConfig.reduceHealthAmount(), 1.0D);
+            double newMaxHealth = Math.max(pending.maxHealth() - pluginConfig.reduceHealthAmount(), pluginConfig.minHealthAfterDeath());
             maxHealthAttribute.setBaseValue(newMaxHealth);
             player.setHealth(newMaxHealth);
         }

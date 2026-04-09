@@ -8,11 +8,11 @@ import java.util.Map;
 public record PluginConfig(
         String version,
         boolean enableDeathPunish,
-        List<String> enableWorlds,
         boolean autoSetRule,
         boolean doImmediateRespawn,
         boolean reduceMaxHealthOnDeath,
         double reduceHealthAmount,
+        double minHealthAfterDeath,
         boolean reduceExpOnDeathEnable,
         double reduceExpValue,
         boolean reduceMoneyOnDeathEnable,
@@ -49,11 +49,11 @@ public record PluginConfig(
         return new PluginConfig(
                 config.getString("version", ""),
                 config.getBoolean("punishOnDeath.enable"),
-                List.copyOf(config.getStringList("punishOnDeath.enableWorlds")),
                 config.getBoolean("autoSetRule"),
                 config.getBoolean("doImmediateRespawn"),
                 config.getBoolean("punishments.reduceMaxHealthOnDeath"),
                 config.getDouble("punishments.reduceHealthAmount"),
+                resolveMinHealthAfterDeath(config),
                 config.getBoolean("punishments.reduceExpOnDeath.enable"),
                 config.getDouble("punishments.reduceExpOnDeath.value"),
                 config.getBoolean("punishments.reduceMoneyOnDeath.enable"),
@@ -86,6 +86,12 @@ public record PluginConfig(
                 HealItemConfig.from(config, "customItems.heal_item"),
                 ExemptionSettings.from(config, "punishments.exemption")
         );
+    }
+
+    private static double resolveMinHealthAfterDeath(FileConfiguration config) {
+        return config.contains("punishments.minHealth")
+                ? config.getDouble("punishments.minHealth")
+                : config.getDouble("punishments.Health.min", 1.0D);
     }
 
     public record ItemConfig(String name, String material, List<String> lore) {

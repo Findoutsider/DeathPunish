@@ -3,10 +3,6 @@ version: "${project.version}"
 # 是否启用死亡惩罚
 punishOnDeath:
   enable: true
-  enableWorlds:
-    - "world"
-    # - "world_nether"
-    # - "world_the_end"
 # 若世界死亡不掉落未开启，则自动开启
 # 死亡不掉落不开启会导致部分功能无效
 autoSetRule: true
@@ -18,6 +14,8 @@ punishments:
   reduceMaxHealthOnDeath: true
   # 死亡时减少的生命值
   reduceHealthAmount: 2
+  # 死亡后生命上限最低保留值
+  minHealth: 1.0
   # 死亡减少玩家等级
   reduceExpOnDeath:
     enable: false

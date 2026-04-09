@@ -26,9 +26,6 @@ public class HelpSubCommand implements SubCommand {
         sender.sendMessage("§c/deathpunish §fadd <玩家> <增量>§7: 增加玩家血量上限");
         sender.sendMessage("§c/deathpunish §fget [玩家]§7: 获取玩家血量上限");
         sender.sendMessage("§c/deathpunish §freload§7: 重载插件配置");
-        sender.sendMessage("");
-        sender.sendMessage("§c当前启用了死亡惩罚的世界有：");
-        context.plugin().getPluginConfig().enableWorlds().forEach(world -> sender.sendMessage("§f" + world));
         return true;
     }
 }
