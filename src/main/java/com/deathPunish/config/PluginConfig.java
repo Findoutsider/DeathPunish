@@ -31,6 +31,10 @@ public record PluginConfig(
         boolean debuffEnable,
         List<String> debuffPotions,
         String skipPunishMsg,
+        String bypassMsg,
+        String exemptionMsg,
+        String protectItemMsg,
+        String enderProtectItemMsg,
         boolean banOnDeath,
         String banReason,
         int banDuration,
@@ -38,7 +42,8 @@ public record PluginConfig(
         String epitaph,
         ItemConfig protectItem,
         ItemConfig enderProtectItem,
-        HealItemConfig healItem
+        HealItemConfig healItem,
+        ExemptionSettings exemptionSettings
 ) {
     public static PluginConfig from(FileConfiguration config) {
         return new PluginConfig(
@@ -67,6 +72,10 @@ public record PluginConfig(
                 config.getBoolean("punishments.debuff.enable"),
                 List.copyOf(config.getStringList("punishments.debuff.potions")),
                 config.getString("punishments.skipPunishMsg"),
+                config.getString("punishments.bypassMsg", config.getString("punishments.skipPunishMsg", "")),
+                config.getString("punishments.exemptionMsg", config.getString("punishments.skipPunishMsg", "")),
+                config.getString("punishments.protectItemMsg", config.getString("punishments.skipPunishMsg", "")),
+                config.getString("punishments.enderProtectItemMsg", config.getString("punishments.skipPunishMsg", "")),
                 config.getBoolean("punishments.banOnDeath"),
                 config.getString("punishments.banReason"),
                 config.getInt("punishments.banDuration"),
@@ -74,7 +83,8 @@ public record PluginConfig(
                 config.getString("punishments.epitaph"),
                 ItemConfig.from(config, "customItems.protect_item"),
                 ItemConfig.from(config, "customItems.ender_protect_item"),
-                HealItemConfig.from(config, "customItems.heal_item")
+                HealItemConfig.from(config, "customItems.heal_item"),
+                ExemptionSettings.from(config, "punishments.exemption")
         );
     }
 
@@ -106,9 +116,9 @@ public record PluginConfig(
             Map<String, String> ingredients = section == null
                     ? Map.of()
                     : section.getValues(false).entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(
-                            Map.Entry::getKey,
-                            entry -> String.valueOf(entry.getValue())
-                    ));
+                    Map.Entry::getKey,
+                    entry -> String.valueOf(entry.getValue())
+            ));
 
             return new HealItemConfig(
                     config.getString(path + ".name", ""),
@@ -126,6 +136,49 @@ public record PluginConfig(
                     ),
                     ingredients
             );
+        }
+    }
+
+    public record ExemptionSettings(
+            List<String> worlds,
+            List<ExemptionCoordinate> coordinates,
+            List<String> worldGuardRegions
+    ) {
+        public static ExemptionSettings from(FileConfiguration config, String path) {
+            return new ExemptionSettings(
+                    List.copyOf(config.getStringList(path + ".world")),
+                    config.getStringList(path + ".coordinate").stream()
+                            .map(ExemptionCoordinate::from)
+                            .filter(java.util.Objects::nonNull)
+                            .toList(),
+                    List.copyOf(config.getStringList(path + ".worldguard_region"))
+            );
+        }
+    }
+
+    public record ExemptionCoordinate(
+            double x,
+            double y,
+            double z,
+            double radius,
+            String world
+    ) {
+        public static ExemptionCoordinate from(String value) {
+            String[] parts = value.trim().split("\\s+");
+            if (parts.length != 5) {
+                return null;
+            }
+            try {
+                return new ExemptionCoordinate(
+                        Double.parseDouble(parts[0]),
+                        Double.parseDouble(parts[1]),
+                        Double.parseDouble(parts[2]),
+                        Double.parseDouble(parts[3]),
+                        parts[4]
+                );
+            } catch (NumberFormatException ex) {
+                return null;
+            }
         }
     }
 }

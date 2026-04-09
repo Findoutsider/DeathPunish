@@ -70,6 +70,10 @@ punishments:
       - "slowness 2400 1"
   # 跳过死亡惩罚
   skipPunishMsg: "§a你逃过了死亡惩罚！"
+  bypassMsg: "§a你拥有 bypass 权限，已跳过死亡惩罚！"
+  exemptionMsg: "§a你位于豁免区域，已跳过死亡惩罚！"
+  protectItemMsg: "§a保护符生效，你逃过了死亡惩罚！"
+  enderProtectItemMsg: "§a末影保护符生效，你逃过了死亡惩罚！"
   # 血量上限为1时死亡后是否封禁玩家
   banOnDeath: false
 
@@ -81,6 +85,16 @@ punishments:
   enableEpitaph: false
 
   epitaph: "§4§l%player%死于此地"
+
+  exemption:
+    world:
+      - "world_nether"
+
+    coordinate:
+      - "0 0 0 100 world" # x y z radius world
+
+    worldguard_region:
+      - "test" # regionID
 
 
 customItems:

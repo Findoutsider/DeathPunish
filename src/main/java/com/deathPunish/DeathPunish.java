@@ -46,6 +46,7 @@ public final class DeathPunish extends JavaPlugin {
     public static volatile boolean updateAvailable;
     public static Economy econ = null;
     public static boolean enableEco = false;
+    public static boolean enableWorldGuard = false;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 
     public static FoliaLib getFoliaLib() { return foliaLib; }
@@ -68,7 +69,7 @@ public final class DeathPunish extends JavaPlugin {
         foliaLib = new FoliaLib(this);
         worldManager = new WorldManager(this);
         new Metrics(this, 24171);
-        setupEconomy();
+        setupSoftDependency();
         registerCustomRecipes();
 
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(punishmentService), this);
@@ -108,20 +109,23 @@ public final class DeathPunish extends JavaPlugin {
         }
     }
 
-    private void setupEconomy() {
-        boolean result = false;
+    private void setupSoftDependency() {
         if (getServer().getPluginManager().getPlugin("Vault") != null) {
             RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
             if (rsp != null) {
                 econ = rsp.getProvider();
-                result = true;
+                enableEco = true;
+                messageService.info("经济内容已启动");
+            } else {
+                messageService.error("未检测到Vault，经济相关功能无法使用");
             }
         }
-        if (result) {
-            enableEco = true;
-            messageService.info("经济内容已启动");
+            
+        if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            messageService.info("WorldGuard已启动");
+            enableWorldGuard = true;
         } else {
-            messageService.error("未检测到Vault，经济相关功能无法使用");
+            messageService.error("未检测到WorldGuard，相关区域保护功能无法使用");
         }
     }
 

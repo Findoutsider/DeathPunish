@@ -4,6 +4,9 @@ import com.deathPunish.DeathPunish;
 import com.deathPunish.config.PluginConfig;
 import com.deathPunish.utils.EpitaphUtils;
 import com.deathPunish.utils.SchedulerUtils;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.WorldGuard;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -48,8 +51,13 @@ public class PunishmentService {
             return;
         }
         if (player.hasPermission("deathpunish.bypass")) {
-            player.sendMessage(Objects.requireNonNull(pluginConfig.skipPunishMsg()));
+            player.sendMessage(Objects.requireNonNull(pluginConfig.bypassMsg()));
             messageService.info("玩家 " + player.getName() + " 因为拥有 bypass 权限跳过死亡惩罚");
+            return;
+        }
+        if (isExemptionArea(player.getLocation())) {
+            player.sendMessage(Objects.requireNonNull(pluginConfig.exemptionMsg()));
+            messageService.info("玩家 " + player.getName() + " 位于豁免区域，跳过死亡惩罚");
             return;
         }
 
@@ -206,11 +214,19 @@ public class PunishmentService {
             } else {
                 inventory.setItem(slot, null);
             }
-            player.sendMessage(Objects.requireNonNull(pluginConfig.skipPunishMsg()));
+            player.sendMessage(Objects.requireNonNull(resolveSkipPunishMessage(configPath, pluginConfig)));
             messageService.info("玩家 " + player.getName() + " 因为 " + itemName + " 跳过死亡惩罚");
             return true;
         }
         return false;
+    }
+
+    private String resolveSkipPunishMessage(String configPath, PluginConfig pluginConfig) {
+        return switch (configPath) {
+            case CustomItemService.PROTECT_ITEM_PATH -> pluginConfig.protectItemMsg();
+            case CustomItemService.ENDER_PROTECT_ITEM_PATH -> pluginConfig.enderProtectItemMsg();
+            default -> pluginConfig.skipPunishMsg();
+        };
     }
 
     private void createEpitaph(Player player, PluginConfig pluginConfig) {
@@ -266,6 +282,55 @@ public class PunishmentService {
         if (dropItems) {
             player.getWorld().dropItemNaturally(player.getLocation(), indexedItem.item());
         }
+    }
+
+    private boolean isExemptionArea(Location location) {
+        if (location.getWorld() == null) {
+            return false;
+        }
+        var exemptionSettings = plugin.getPluginConfig().exemptionSettings();
+        if (exemptionSettings.worlds().stream().anyMatch(world -> world.equalsIgnoreCase(location.getWorld().getName()))) {
+            return true;
+        }
+        boolean inCoordinate = exemptionSettings.coordinates().stream().anyMatch(coordinate -> isInsideCoordinate(location, coordinate));
+        return inCoordinate || isInsideWorldGuardRegion(location, exemptionSettings.worldGuardRegions());
+    }
+
+    private boolean isInsideCoordinate(Location location, PluginConfig.ExemptionCoordinate coordinate) {
+        if (!location.getWorld().getName().equalsIgnoreCase(coordinate.world())) {
+            return false;
+        }
+        Location center = new Location(location.getWorld(), coordinate.x(), coordinate.y(), coordinate.z());
+        return center.distanceSquared(location) <= coordinate.radius() * coordinate.radius();
+    }
+
+    private boolean isInsideWorldGuardRegion(Location location, List<String> configuredRegions) {
+        if (!DeathPunish.enableWorldGuard || configuredRegions.isEmpty()) {
+            return false;
+        }
+        try {
+            var regionContainer = WorldGuard.getInstance().getPlatform().getRegionContainer();
+            var regionManager = regionContainer.get(BukkitAdapter.adapt(location.getWorld()));
+            if (regionManager == null) {
+                return false;
+            }
+            var applicableRegions = regionManager.getApplicableRegions(BlockVector3.at(
+                    location.getBlockX(),
+                    location.getBlockY(),
+                    location.getBlockZ()
+            ));
+            for (var region : applicableRegions) {
+                String regionId = region.getId();
+                for (String configuredRegion : configuredRegions) {
+                    if (regionId.equalsIgnoreCase(configuredRegion)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            messageService.warn("检查 WorldGuard 豁免区域失败: " + ex.getMessage());
+        }
+        return false;
     }
 
     private record PendingPunishment(double maxHealth, int foodLevel) {}
