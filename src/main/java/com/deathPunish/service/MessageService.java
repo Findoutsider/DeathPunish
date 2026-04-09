@@ -4,7 +4,7 @@ import com.deathPunish.utils.LoggerUtils;
 import org.bukkit.command.CommandSender;
 
 public class MessageService {
-    private static final String PLUGIN_PREFIX = "§8[§bDeathPunish§8]§r ";
+    public static final String PLUGIN_PREFIX = "§8[§bDeathPunish§8]§r ";
 
     private final LoggerUtils logger;
 

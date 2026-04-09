@@ -147,16 +147,16 @@ public final class DeathPunish extends JavaPlugin {
                     String info = (String) jsonObject.get("body");
                     if (latestVersion != null) {
                         String pluginVersion = getPluginVersion();
-                        int compareResult = compareVersion(latestVersion, pluginVersion);
-                        if (compareResult > 0) {
+                        int compareResult = compareVersion(pluginVersion, latestVersion);
+                        if (compareResult < 0) {
                             messageService.info("检测到新版本: " + latestVersion + "，请前往 https://github.com/Findoutsider/DeathPunish 更新");
                             DeathPunish.latestVersion = latestVersion;
                             updateAvailable = true;
                             if (info != null && !info.isBlank()) {
                                 messageService.info("新版本信息: " + info);
                             }
-                        } else if (compareResult < 0) {
-                            messageService.info("你正在使用开发版本！v" + pluginVersion);
+                        } else if (compareResult > 0) {
+                            messageService.info("你正在使用开发版本: v" + pluginVersion);
                         } else {
                             messageService.info("当前版本已是最新: v" + pluginVersion);
                             DeathPunish.latestVersion = null;
