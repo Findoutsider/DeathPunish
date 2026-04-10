@@ -1,5 +1,5 @@
 /target
-/test
+src/test
 /docs
 /.idea
 /out
