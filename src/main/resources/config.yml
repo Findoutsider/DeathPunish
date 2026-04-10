@@ -3,6 +3,23 @@ version: "${project.version}"
 # 是否启用死亡惩罚
 punishOnDeath:
   enable: true
+  mode: "blacklist" # blacklist / whitelist
+  
+area:
+  blacklist:
+    world:
+      - "world_nether"
+    coordinate:
+      - "0 0 0 100 world" # x y z radius world
+    worldguard_region:
+      - "spawn" # regionID
+
+  whitelist:
+    world: []
+    coordinate: []
+    worldguard_region: []
+
+
 # 若世界死亡不掉落未开启，则自动开启
 # 死亡不掉落不开启会导致部分功能无效
 autoSetRule: true
@@ -83,16 +100,6 @@ punishments:
   enableEpitaph: false
 
   epitaph: "§4§l%player%死于此地"
-
-  exemption:
-    world:
-      - "world_nether"
-
-    coordinate:
-      - "0 0 0 100 world" # x y z radius world
-
-    worldguard_region:
-      - "test" # regionID
 
 
 customItems:

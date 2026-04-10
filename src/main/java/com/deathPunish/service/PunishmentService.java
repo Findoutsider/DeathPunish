@@ -55,9 +55,9 @@ public class PunishmentService {
             messageService.info("玩家 " + player.getName() + " 因为拥有 bypass 权限跳过死亡惩罚");
             return;
         }
-        if (isExemptionArea(player.getLocation())) {
+        if (!shouldPunish(player.getLocation())) {
             player.sendMessage(Objects.requireNonNull(pluginConfig.exemptionMsg()));
-            messageService.info("玩家 " + player.getName() + " 位于豁免区域，跳过死亡惩罚");
+            messageService.info("玩家 " + player.getName() + " 当前区域未触发死亡惩罚");
             return;
         }
 
@@ -284,16 +284,25 @@ public class PunishmentService {
         }
     }
 
-    private boolean isExemptionArea(Location location) {
+    private boolean shouldPunish(Location location) {
         if (location.getWorld() == null) {
             return false;
         }
-        var exemptionSettings = plugin.getPluginConfig().exemptionSettings();
-        if (exemptionSettings.worlds().stream().anyMatch(world -> world.equalsIgnoreCase(location.getWorld().getName()))) {
+        var pluginConfig = plugin.getPluginConfig();
+        var areaSettings = pluginConfig.areaSettings();
+        return switch (pluginConfig.punishMode()) {
+            case "whitelist" -> matchesAreaRule(location, areaSettings.whitelist());
+            case "blacklist" -> !matchesAreaRule(location, areaSettings.blacklist());
+            default -> !matchesAreaRule(location, areaSettings.blacklist());
+        };
+    }
+
+    private boolean matchesAreaRule(Location location, PluginConfig.AreaRuleSet areaRuleSet) {
+        if (areaRuleSet.worlds().stream().anyMatch(world -> world.equalsIgnoreCase(location.getWorld().getName()))) {
             return true;
         }
-        boolean inCoordinate = exemptionSettings.coordinates().stream().anyMatch(coordinate -> isInsideCoordinate(location, coordinate));
-        return inCoordinate || isInsideWorldGuardRegion(location, exemptionSettings.worldGuardRegions());
+        boolean inCoordinate = areaRuleSet.coordinates().stream().anyMatch(coordinate -> isInsideCoordinate(location, coordinate));
+        return inCoordinate || isInsideWorldGuardRegion(location, areaRuleSet.worldGuardRegions());
     }
 
     private boolean isInsideCoordinate(Location location, PluginConfig.ExemptionCoordinate coordinate) {

@@ -8,6 +8,7 @@ import java.util.Map;
 public record PluginConfig(
         String version,
         boolean enableDeathPunish,
+        String punishMode,
         boolean autoSetRule,
         boolean doImmediateRespawn,
         boolean reduceMaxHealthOnDeath,
@@ -43,12 +44,13 @@ public record PluginConfig(
         ItemConfig protectItem,
         ItemConfig enderProtectItem,
         HealItemConfig healItem,
-        ExemptionSettings exemptionSettings
+        AreaSettings areaSettings
 ) {
     public static PluginConfig from(FileConfiguration config) {
         return new PluginConfig(
                 config.getString("version", ""),
                 config.getBoolean("punishOnDeath.enable"),
+                config.getString("punishOnDeath.mode", "blacklist").toLowerCase(),
                 config.getBoolean("autoSetRule"),
                 config.getBoolean("doImmediateRespawn"),
                 config.getBoolean("punishments.reduceMaxHealthOnDeath"),
@@ -84,7 +86,7 @@ public record PluginConfig(
                 ItemConfig.from(config, "customItems.protect_item"),
                 ItemConfig.from(config, "customItems.ender_protect_item"),
                 HealItemConfig.from(config, "customItems.heal_item"),
-                ExemptionSettings.from(config, "punishments.exemption")
+                AreaSettings.from(config)
         );
     }
 
@@ -145,13 +147,29 @@ public record PluginConfig(
         }
     }
 
-    public record ExemptionSettings(
+    public record AreaSettings(
+            AreaRuleSet blacklist,
+            AreaRuleSet whitelist
+    ) {
+        public static AreaSettings from(FileConfiguration config) {
+            boolean hasAreaConfig = config.contains("area.blacklist") || config.contains("area.whitelist");
+            AreaRuleSet blacklist = hasAreaConfig
+                    ? AreaRuleSet.from(config, "area.blacklist")
+                    : AreaRuleSet.from(config, "punishments.exemption");
+            AreaRuleSet whitelist = hasAreaConfig
+                    ? AreaRuleSet.from(config, "area.whitelist")
+                    : AreaRuleSet.empty();
+            return new AreaSettings(blacklist, whitelist);
+        }
+    }
+
+    public record AreaRuleSet(
             List<String> worlds,
             List<ExemptionCoordinate> coordinates,
             List<String> worldGuardRegions
     ) {
-        public static ExemptionSettings from(FileConfiguration config, String path) {
-            return new ExemptionSettings(
+        public static AreaRuleSet from(FileConfiguration config, String path) {
+            return new AreaRuleSet(
                     List.copyOf(config.getStringList(path + ".world")),
                     config.getStringList(path + ".coordinate").stream()
                             .map(ExemptionCoordinate::from)
@@ -159,6 +177,10 @@ public record PluginConfig(
                             .toList(),
                     List.copyOf(config.getStringList(path + ".worldguard_region"))
             );
+        }
+
+        public static AreaRuleSet empty() {
+            return new AreaRuleSet(List.of(), List.of(), List.of());
         }
     }
 
