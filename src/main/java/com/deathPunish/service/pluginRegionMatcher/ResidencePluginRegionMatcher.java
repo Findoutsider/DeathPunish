@@ -1,4 +1,4 @@
-package com.deathPunish.service;
+package com.deathPunish.service.pluginRegionMatcher;
 
 import java.util.List;
 
@@ -6,6 +6,8 @@ import org.bukkit.Location;
 
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.deathPunish.DeathPunish;
+import com.deathPunish.service.MessageService;
+import com.deathPunish.service.PluginRegionMatcher;
 
 import static com.deathPunish.DeathPunish.residence;
 
