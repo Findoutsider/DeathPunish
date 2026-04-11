@@ -101,6 +101,16 @@ punishments:
 
   epitaph: "§4§l%player%死于此地"
 
+# 启用击杀掠夺
+killSteal:
+  # 偷取生命上限
+  lifeSteal:
+    enable: false
+    rate: 0.5 # 偷取的生命值占reduceHealthAmount的比例
+  expSteal:
+    enable: false
+    rate: 0.5 # 偷取的经验值占玩家失去的等级的比例
+
 
 customItems:
   # 开启后可以使用其他插件来自定义配方

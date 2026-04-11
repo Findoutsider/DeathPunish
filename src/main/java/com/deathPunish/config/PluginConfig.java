@@ -44,6 +44,7 @@ public record PluginConfig(
         ItemConfig protectItem,
         ItemConfig enderProtectItem,
         HealItemConfig healItem,
+        KillStealConfig killSteal,
         AreaSettings areaSettings
 ) {
     public static PluginConfig from(FileConfiguration config) {
@@ -86,6 +87,7 @@ public record PluginConfig(
                 ItemConfig.from(config, "customItems.protect_item"),
                 ItemConfig.from(config, "customItems.ender_protect_item"),
                 HealItemConfig.from(config, "customItems.heal_item"),
+                KillStealConfig.from(config, "killSteal"),
                 AreaSettings.from(config)
         );
     }
@@ -143,6 +145,30 @@ public record PluginConfig(
                             config.getString(path + ".shape3", "yxy")
                     ),
                     ingredients
+            );
+        }
+    }
+
+    public record KillStealConfig(
+            StealConfig lifeSteal,
+            StealConfig expSteal
+    ) {
+        public static KillStealConfig from(FileConfiguration config, String path) {
+            return new KillStealConfig(
+                    StealConfig.from(config, path + ".lifeSteal"),
+                    StealConfig.from(config, path + ".expSteal")
+            );
+        }
+    }
+
+    public record StealConfig(
+            boolean enable,
+            double rate
+    ) {
+        public static StealConfig from(FileConfiguration config, String path) {
+            return new StealConfig(
+                    config.getBoolean(path + ".enable"),
+                    config.getDouble(path + ".rate")
             );
         }
     }

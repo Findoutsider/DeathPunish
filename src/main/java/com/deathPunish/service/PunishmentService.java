@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -46,6 +47,16 @@ public class PunishmentService {
         this.customItemService = customItemService;
         this.messageService = messageService;
         this.pluginRegionMatcher = pluginRegionMatcher;
+    }
+
+    public void handleKillSteal(PlayerDeathEvent event) { 
+        var pluginConfig = plugin.getPluginConfig();
+        if (pluginConfig.reduceMaxHealthOnDeath() && pluginConfig.reduceHealthAmount() > 0 && pluginConfig.killSteal().lifeSteal().enable()) {
+            applyLifeSteal(event, pluginConfig);
+        }
+        if (pluginConfig.killSteal().expSteal().enable()) {
+            applyExpSteal(event, pluginConfig);
+        }
     }
 
     public void handleDeath(Player player) {
@@ -151,6 +162,52 @@ public class PunishmentService {
         if (pluginConfig.debuffEnable()) {
             applyDebuffs(player, pluginConfig);
         }
+    }
+
+    private void applyLifeSteal(PlayerDeathEvent event, PluginConfig pluginConfig) { 
+        double reduceHealthAmount = pluginConfig.reduceHealthAmount();
+        double stealRate = pluginConfig.killSteal().lifeSteal().rate();
+        double healthToSteal = reduceHealthAmount * stealRate;
+        if (healthToSteal <= 0.0D) {
+            return;
+        }
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) {
+            return;
+        }
+
+        var killerMaxHealthAttribute = killer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (killerMaxHealthAttribute == null) {
+            return;
+        }
+
+        double newMaxHealth = killerMaxHealthAttribute.getBaseValue() + healthToSteal;
+        killerMaxHealthAttribute.setBaseValue(newMaxHealth);
+        killer.setHealth(Math.min(killer.getHealth() + healthToSteal, newMaxHealth));
+    }
+
+    private void applyExpSteal(PlayerDeathEvent event, PluginConfig pluginConfig) {
+        double reduceExpValue = pluginConfig.reduceExpValue();
+        double stealRate = pluginConfig.killSteal().expSteal().rate();
+        if (reduceExpValue <= 0.0D || stealRate <= 0.0D) {
+            return;
+        }
+
+        Player victim = event.getEntity();
+        Player killer = victim.getKiller();
+        if (killer == null) {
+            return;
+        }
+
+        int currentLevel = Math.max(victim.getLevel(), 0);
+        int newLevel = Math.max((int) (currentLevel * (1 - reduceExpValue)), 0);
+        int lostLevels = currentLevel - newLevel;
+        int stolenLevels = (int) (lostLevels * stealRate);
+        if (stolenLevels <= 0) {
+            return;
+        }
+
+        killer.giveExpLevels(stolenLevels);
     }
 
     private void applyDebuffs(Player player, PluginConfig pluginConfig) {
