@@ -11,13 +11,13 @@ area:
       - "world_nether"
     coordinate:
       - "0 0 0 100 world" # x y z radius world
-    worldguard_region:
+    plugin_region:
       - "spawn" # regionID
 
   whitelist:
     world: []
     coordinate: []
-    worldguard_region: []
+    plugin_region: []
 
 
 # 若世界死亡不掉落未开启，则自动开启

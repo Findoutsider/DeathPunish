@@ -1,6 +1,8 @@
 package com.deathPunish;
 
 import com.deathPunish.config.PluginConfig;
+import com.bekvon.bukkit.residence.Residence;
+import com.bekvon.bukkit.residence.protection.ResidenceManager;
 import com.deathPunish.Listener.EatCustomItemListener;
 import com.deathPunish.Listener.PlayerDeathListener;
 import com.deathPunish.Listener.PlayerInteractListener;
@@ -12,6 +14,7 @@ import com.deathPunish.utils.LoggerUtils;
 import com.deathPunish.utils.Metrics;
 import com.deathPunish.utils.SchedulerUtils;
 import com.deathPunish.utils.manager.WorldManager;
+import com.sk89q.worldguard.WorldGuard;
 import com.deathPunish.commands.DeathPunishCommand;
 import com.tcoded.folialib.FoliaLib;
 import net.milkbowl.vault.economy.Economy;
@@ -44,9 +47,14 @@ public final class DeathPunish extends JavaPlugin {
 
     public static volatile String latestVersion;
     public static volatile boolean updateAvailable;
+
     public static Economy econ = null;
+    public static WorldGuard worldGuard = null;
+    public static Residence residence = null;
+
     public static boolean enableEco = false;
     public static boolean enableWorldGuard = false;
+    public static boolean enableResidence = false;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 
     public static FoliaLib getFoliaLib() { return foliaLib; }
@@ -115,18 +123,22 @@ public final class DeathPunish extends JavaPlugin {
             if (rsp != null) {
                 econ = rsp.getProvider();
                 enableEco = true;
-                messageService.info("经济内容已启动");
-            } else {
-                messageService.error("未检测到Vault，经济相关功能无法使用");
             }
         }
             
         if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
-            messageService.info("WorldGuard已启动");
             enableWorldGuard = true;
-        } else {
-            messageService.error("未检测到WorldGuard，相关区域保护功能无法使用");
+            worldGuard = WorldGuard.getInstance();
         }
+
+        if (getServer().getPluginManager().getPlugin("Residence") != null) {
+            enableResidence = true;
+            residence = Residence.getInstance();
+        }
+
+        messageService.info("\n=================================\n");
+        messageService.info("已启用依赖：\n" + (enableEco ? "Vault \n" : "") + (enableWorldGuard ? "WorldGuard \n" : "") + (enableResidence ? "Residence \n" : ""));
+        messageService.info("\n=================================\n");
     }
 
     public static Economy getEconomy() {
