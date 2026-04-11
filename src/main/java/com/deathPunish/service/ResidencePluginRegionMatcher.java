@@ -27,12 +27,16 @@ public class ResidencePluginRegionMatcher implements PluginRegionMatcher {
                 return false;
             }
 
-            // TODO: 不知道Name和ID哪个对，先这样写吧
-            if (configuredRegions.contains(res.getName()) || configuredRegions.contains(res.getAreaIDbyLoc(location))) {
-                return true;
+            String residenceName = res.getName();
+            String areaId = res.getAreaIDbyLoc(location);
+            for (String configuredRegion : configuredRegions) {
+                if ((residenceName != null && residenceName.equalsIgnoreCase(configuredRegion))
+                        || (areaId != null && areaId.equalsIgnoreCase(configuredRegion))) {
+                    return true;
+                }
             }
         } catch (Exception ex) { 
-            messageService.warn("检查插件区域失败: " + ex.getMessage());
+            messageService.warn("检查 Residence 区域失败: " + ex.getMessage());
         }
         return false;
     }

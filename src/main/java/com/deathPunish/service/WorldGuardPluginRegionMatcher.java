@@ -46,7 +46,7 @@ public class WorldGuardPluginRegionMatcher implements PluginRegionMatcher {
                 }
             }
         } catch (Exception ex) {
-            messageService.warn("检查插件区域失败: " + ex.getMessage());
+            messageService.warn("检查 WorldGuard 区域失败: " + ex.getMessage());
         }
         return false;
     }
