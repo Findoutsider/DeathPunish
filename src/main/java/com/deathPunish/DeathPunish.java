@@ -143,7 +143,7 @@ public final class DeathPunish extends JavaPlugin {
             residence = Residence.getInstance();
         }
 
-        messageService.info("\n=================================\n已启用依赖：\n" + (enableEco ? "Vault \n" : "") + (enableWorldGuard ? "WorldGuard \n" : "") + (enableResidence ? "Residence \n" : "") + "\n=================================\n");
+        messageService.info("\n=================================\n\n已启用依赖：\n" + (enableEco ? "Vault \n" : "") + (enableWorldGuard ? "WorldGuard \n" : "") + (enableResidence ? "Residence \n" : "") + "\n=================================\n");
     }
 
     public static Economy getEconomy() {

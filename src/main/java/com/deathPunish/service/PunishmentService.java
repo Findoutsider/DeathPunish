@@ -40,11 +40,29 @@ public class PunishmentService {
     private final Map<UUID, PendingPunishment> pendingPunishments = new ConcurrentHashMap<>();
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService) {
-        this(plugin, customItemService, messageService, new WorldGuardPluginRegionMatcher(messageService), plugin.getMaxHealthModifierService());
+        this(
+                plugin,
+                customItemService,
+                messageService,
+                new CompositePluginRegionMatcher(
+                        new WorldGuardPluginRegionMatcher(messageService),
+                        new ResidencePluginRegionMatcher(messageService)
+                ),
+                plugin.getMaxHealthModifierService()
+        );
     }
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, MaxHealthModifierService maxHealthModifierService) {
-        this(plugin, customItemService, messageService, new WorldGuardPluginRegionMatcher(messageService), maxHealthModifierService);
+        this(
+                plugin,
+                customItemService,
+                messageService,
+                new CompositePluginRegionMatcher(
+                        new WorldGuardPluginRegionMatcher(messageService),
+                        new ResidencePluginRegionMatcher(messageService)
+                ),
+                maxHealthModifierService
+        );
     }
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, PluginRegionMatcher pluginRegionMatcher, MaxHealthModifierService maxHealthModifierService) {
