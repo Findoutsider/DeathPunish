@@ -166,16 +166,19 @@ public record PluginConfig(
     public record AreaRuleSet(
             List<String> worlds,
             List<ExemptionCoordinate> coordinates,
-            List<String> worldGuardRegions
+            List<String> pluginRegions
     ) {
         public static AreaRuleSet from(FileConfiguration config, String path) {
+            List<String> pluginRegions = config.contains(path + ".plugin_region")
+                    ? List.copyOf(config.getStringList(path + ".plugin_region"))
+                    : List.copyOf(config.getStringList(path + ".worldguard_region"));
             return new AreaRuleSet(
                     List.copyOf(config.getStringList(path + ".world")),
                     config.getStringList(path + ".coordinate").stream()
                             .map(ExemptionCoordinate::from)
                             .filter(java.util.Objects::nonNull)
                             .toList(),
-                    List.copyOf(config.getStringList(path + ".worldguard_region"))
+                    pluginRegions
             );
         }
 

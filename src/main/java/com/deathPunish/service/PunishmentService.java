@@ -4,9 +4,6 @@ import com.deathPunish.DeathPunish;
 import com.deathPunish.config.PluginConfig;
 import com.deathPunish.utils.EpitaphUtils;
 import com.deathPunish.utils.SchedulerUtils;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.WorldGuard;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -37,12 +34,18 @@ public class PunishmentService {
     private final DeathPunish plugin;
     private final CustomItemService customItemService;
     private final MessageService messageService;
+    private final PluginRegionMatcher pluginRegionMatcher;
     private final Map<UUID, PendingPunishment> pendingPunishments = new ConcurrentHashMap<>();
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService) {
+        this(plugin, customItemService, messageService, new WorldGuardPluginRegionMatcher(messageService));
+    }
+
+    public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, PluginRegionMatcher pluginRegionMatcher) {
         this.plugin = plugin;
         this.customItemService = customItemService;
         this.messageService = messageService;
+        this.pluginRegionMatcher = pluginRegionMatcher;
     }
 
     public void handleDeath(Player player) {
@@ -302,7 +305,7 @@ public class PunishmentService {
             return true;
         }
         boolean inCoordinate = areaRuleSet.coordinates().stream().anyMatch(coordinate -> isInsideCoordinate(location, coordinate));
-        return inCoordinate || isInsideWorldGuardRegion(location, areaRuleSet.worldGuardRegions());
+        return inCoordinate || pluginRegionMatcher.matches(location, areaRuleSet.pluginRegions());
     }
 
     private boolean isInsideCoordinate(Location location, PluginConfig.ExemptionCoordinate coordinate) {
@@ -311,35 +314,6 @@ public class PunishmentService {
         }
         Location center = new Location(location.getWorld(), coordinate.x(), coordinate.y(), coordinate.z());
         return center.distanceSquared(location) <= coordinate.radius() * coordinate.radius();
-    }
-
-    private boolean isInsideWorldGuardRegion(Location location, List<String> configuredRegions) {
-        if (!DeathPunish.enableWorldGuard || configuredRegions.isEmpty()) {
-            return false;
-        }
-        try {
-            var regionContainer = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            var regionManager = regionContainer.get(BukkitAdapter.adapt(location.getWorld()));
-            if (regionManager == null) {
-                return false;
-            }
-            var applicableRegions = regionManager.getApplicableRegions(BlockVector3.at(
-                    location.getBlockX(),
-                    location.getBlockY(),
-                    location.getBlockZ()
-            ));
-            for (var region : applicableRegions) {
-                String regionId = region.getId();
-                for (String configuredRegion : configuredRegions) {
-                    if (regionId.equalsIgnoreCase(configuredRegion)) {
-                        return true;
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            messageService.warn("检查 WorldGuard 豁免区域失败: " + ex.getMessage());
-        }
-        return false;
     }
 
     private record PendingPunishment(double maxHealth, int foodLevel) {}
