@@ -36,17 +36,23 @@ public class PunishmentService {
     private final CustomItemService customItemService;
     private final MessageService messageService;
     private final PluginRegionMatcher pluginRegionMatcher;
+    private final MaxHealthModifierService maxHealthModifierService;
     private final Map<UUID, PendingPunishment> pendingPunishments = new ConcurrentHashMap<>();
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService) {
-        this(plugin, customItemService, messageService, new WorldGuardPluginRegionMatcher(messageService));
+        this(plugin, customItemService, messageService, new WorldGuardPluginRegionMatcher(messageService), plugin.getMaxHealthModifierService());
     }
 
-    public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, PluginRegionMatcher pluginRegionMatcher) {
+    public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, MaxHealthModifierService maxHealthModifierService) {
+        this(plugin, customItemService, messageService, new WorldGuardPluginRegionMatcher(messageService), maxHealthModifierService);
+    }
+
+    public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, PluginRegionMatcher pluginRegionMatcher, MaxHealthModifierService maxHealthModifierService) {
         this.plugin = plugin;
         this.customItemService = customItemService;
         this.messageService = messageService;
         this.pluginRegionMatcher = pluginRegionMatcher;
+        this.maxHealthModifierService = maxHealthModifierService;
     }
 
     public void handleKillSteal(PlayerDeathEvent event) { 
@@ -75,8 +81,8 @@ public class PunishmentService {
             return;
         }
 
-        var maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealthAttribute == null) {
+        Double effectiveMaxHealth = maxHealthModifierService.getEffectiveMaxHealth(player);
+        if (effectiveMaxHealth == null) {
             messageService.error("无法读取玩家 " + player.getName() + " 的最大生命值属性");
             return;
         }
@@ -85,7 +91,7 @@ public class PunishmentService {
             return;
         }
 
-        pendingPunishments.put(player.getUniqueId(), new PendingPunishment(maxHealthAttribute.getBaseValue(), player.getFoodLevel()));
+        pendingPunishments.put(player.getUniqueId(), new PendingPunishment(effectiveMaxHealth, player.getFoodLevel()));
         applyImmediatePunishments(player, pluginConfig);
         messageService.info("玩家 " + player.getName() + " 受到了死亡惩罚");
 
@@ -149,10 +155,9 @@ public class PunishmentService {
             return;
         }
 
-        var maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealthAttribute != null && pluginConfig.reduceMaxHealthOnDeath()) {
+        if (pluginConfig.reduceMaxHealthOnDeath()) {
             double newMaxHealth = Math.max(pending.maxHealth() - pluginConfig.reduceHealthAmount(), pluginConfig.minHealthAfterDeath());
-            maxHealthAttribute.setBaseValue(newMaxHealth);
+            maxHealthModifierService.setEffectiveMaxHealth(player, newMaxHealth);
             player.setHealth(newMaxHealth);
         }
 
@@ -176,13 +181,13 @@ public class PunishmentService {
             return;
         }
 
-        var killerMaxHealthAttribute = killer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (killerMaxHealthAttribute == null) {
+        Double killerMaxHealth = maxHealthModifierService.getEffectiveMaxHealth(killer);
+        if (killerMaxHealth == null) {
             return;
         }
 
-        double newMaxHealth = killerMaxHealthAttribute.getBaseValue() + healthToSteal;
-        killerMaxHealthAttribute.setBaseValue(newMaxHealth);
+        double newMaxHealth = killerMaxHealth + healthToSteal;
+        maxHealthModifierService.setEffectiveMaxHealth(killer, newMaxHealth);
         killer.setHealth(Math.min(killer.getHealth() + healthToSteal, newMaxHealth));
     }
 

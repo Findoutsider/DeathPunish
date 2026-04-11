@@ -25,6 +25,7 @@ public class HelpSubCommand implements SubCommand {
         sender.sendMessage("§c/deathpunish §fset <玩家> <血量> [是否回满]§7: 设置玩家血量上限");
         sender.sendMessage("§c/deathpunish §fadd <玩家> <增量>§7: 增加玩家血量上限");
         sender.sendMessage("§c/deathpunish §fget [玩家]§7: 获取玩家血量上限");
+        sender.sendMessage("§c/deathpunish §fmigrate <玩家>§7: 将玩家的血量上限迁移至新计算方式");
         sender.sendMessage("§c/deathpunish §freload§7: 重载插件配置");
         return true;
     }

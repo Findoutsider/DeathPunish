@@ -8,7 +8,7 @@ softdepend: [Vault, WorldGuard, Residence]
 commands:
   deathpunish:
     description: 死亡惩罚
-    usage: /deathpunish <help|give|set|add|get|reload>
+    usage: /deathpunish <help|give|set|add|get|migrate|reload>
     aliases:
       - dp
 

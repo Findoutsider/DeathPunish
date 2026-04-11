@@ -1,8 +1,6 @@
 package com.deathPunish.commands;
 
 import org.bukkit.Bukkit;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -58,13 +56,14 @@ public class HealthSubCommand implements SubCommand {
             return false;
         }
 
-        var maxHealth = target.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth == null) {
+        var maxHealthModifierService = context.plugin().getMaxHealthModifierService();
+        Double effectiveMaxHealth = maxHealthModifierService.getEffectiveMaxHealth(target);
+        if (effectiveMaxHealth == null) {
             context.messageService().error(sender, "无法读取目标玩家的最大生命值属性。");
             return false;
         }
 
-        maxHealth.setBaseValue(value);
+        maxHealthModifierService.setEffectiveMaxHealth(target, value);
         if (args.length >= 4 && Boolean.parseBoolean(args[3])) {
             target.setHealth(value);
             context.messageService().info(sender, "已设置玩家 " + target.getName() + " 最大生命值为 " + value + " 并为其恢复到最大生命");
@@ -91,18 +90,19 @@ public class HealthSubCommand implements SubCommand {
             return false;
         }
 
-        var maxHealth = target.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth == null) {
+        var maxHealthModifierService = context.plugin().getMaxHealthModifierService();
+        Double currentMaxHealth = maxHealthModifierService.getEffectiveMaxHealth(target);
+        if (currentMaxHealth == null) {
             context.messageService().error(sender, "无法读取目标玩家的最大生命值属性。");
             return false;
         }
 
-        double newValue = maxHealth.getBaseValue() + delta;
+        double newValue = currentMaxHealth + delta;
         if (newValue < 1.0D) {
             context.messageService().error(sender, "不能让玩家血量上限小于 1");
             return false;
         }
-        maxHealth.setBaseValue(newValue);
+        maxHealthModifierService.setEffectiveMaxHealth(target, newValue);
         context.messageService().info(sender, "已为玩家 " + target.getName() + " 增加血量上限，当前上限为 " + newValue);
         return true;
     }
@@ -123,12 +123,12 @@ public class HealthSubCommand implements SubCommand {
             }
         }
 
-        AttributeInstance maxHealth = target.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth == null) {
+        Double effectiveMaxHealth = context.plugin().getMaxHealthModifierService().getEffectiveMaxHealth(target);
+        if (effectiveMaxHealth == null) {
             context.messageService().error(sender, "无法读取目标玩家的最大生命值属性。");
             return false;
         }
-        context.messageService().info(sender, "玩家 " + target.getName() + " 的血量上限为 " + maxHealth.getBaseValue());
+        context.messageService().info(sender, "玩家 " + target.getName() + " 的血量上限为 " + effectiveMaxHealth);
         return true;
     }
 

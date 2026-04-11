@@ -25,6 +25,7 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
         subCommands.put("set", new HealthSubCommand(context, HealthSubCommand.Mode.SET));
         subCommands.put("add", new HealthSubCommand(context, HealthSubCommand.Mode.ADD));
         subCommands.put("get", new HealthSubCommand(context, HealthSubCommand.Mode.GET));
+        subCommands.put("migrate", new MigrateSubCommand(context));
         subCommands.put("reload", new ReloadSubCommand(context));
     }
 

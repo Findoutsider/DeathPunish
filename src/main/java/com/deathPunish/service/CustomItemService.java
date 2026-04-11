@@ -5,7 +5,6 @@ import com.deathPunish.config.PluginConfig;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -106,20 +105,27 @@ public class CustomItemService {
             return false;
         }
 
-        AttributeInstance maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealthAttribute == null) {
+        if (player.getAttribute(Attribute.GENERIC_MAX_HEALTH) == null) {
             messageService.error("无法读取玩家 " + player.getName() + " 的最大生命值属性");
             return false;
         }
 
         var healItem = plugin.getPluginConfig().healItem();
-        double currentMaxHealth = maxHealthAttribute.getBaseValue();
-        double newMaxHealth = Math.min(currentMaxHealth + healItem.healAmount(), healItem.maxHealth());
+        var maxHealthModifierService = plugin.getMaxHealthModifierService();
+        Double currentMaxHealth = maxHealthModifierService.getEffectiveMaxHealth(player);
+        Double externalMaxHealth = maxHealthModifierService.getExternalMaxHealth(player);
+        if (currentMaxHealth == null || externalMaxHealth == null) {
+            messageService.error("无法读取玩家 " + player.getName() + " 的最大生命值属性");
+            return false;
+        }
 
-        maxHealthAttribute.setBaseValue(newMaxHealth);
+        double healCap = Math.max(healItem.maxHealth(), externalMaxHealth);
+        double newMaxHealth = Math.min(currentMaxHealth + healItem.healAmount(), healCap);
+
+        maxHealthModifierService.setEffectiveMaxHealth(player, newMaxHealth);
         player.setHealth(newMaxHealth);
         player.setFoodLevel(20);
-        player.sendMessage(Objects.requireNonNull(currentMaxHealth + healItem.healAmount() > healItem.maxHealth()
+        player.sendMessage(Objects.requireNonNull(currentMaxHealth + healItem.healAmount() > healCap
                 ? healItem.eatWithoutHealMsg()
                 : healItem.eatMsg()));
 

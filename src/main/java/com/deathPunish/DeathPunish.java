@@ -2,12 +2,12 @@ package com.deathPunish;
 
 import com.deathPunish.config.PluginConfig;
 import com.bekvon.bukkit.residence.Residence;
-import com.bekvon.bukkit.residence.protection.ResidenceManager;
 import com.deathPunish.Listener.EatCustomItemListener;
 import com.deathPunish.Listener.PlayerDeathListener;
 import com.deathPunish.Listener.PlayerInteractListener;
 import com.deathPunish.Listener.PlayerJoinListener;
 import com.deathPunish.service.CustomItemService;
+import com.deathPunish.service.MaxHealthModifierService;
 import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PunishmentService;
 import com.deathPunish.utils.LoggerUtils;
@@ -42,6 +42,7 @@ public final class DeathPunish extends JavaPlugin {
     public static LoggerUtils log;
     private PluginConfig pluginConfig;
     private CustomItemService customItemService;
+    private MaxHealthModifierService maxHealthModifierService;
     private PunishmentService punishmentService;
     private MessageService messageService;
 
@@ -61,6 +62,7 @@ public final class DeathPunish extends JavaPlugin {
     public static WorldManager getWorldManger() { return worldManager; }
     public PluginConfig getPluginConfig() { return pluginConfig; }
     public CustomItemService getCustomItemService() { return customItemService; }
+    public MaxHealthModifierService getMaxHealthModifierService() { return maxHealthModifierService; }
     public PunishmentService getPunishmentService() { return punishmentService; }
     public MessageService getMessageService() { return messageService; }
     public String getPluginVersion() { return getDescription().getVersion(); }
@@ -72,8 +74,9 @@ public final class DeathPunish extends JavaPlugin {
         saveDefaultConfig();
         reloadConfig();
         refreshConfigState();
+        maxHealthModifierService = new MaxHealthModifierService(this);
         customItemService = new CustomItemService(this);
-        punishmentService = new PunishmentService(this, customItemService, messageService);
+        punishmentService = new PunishmentService(this, customItemService, messageService, maxHealthModifierService);
         foliaLib = new FoliaLib(this);
         worldManager = new WorldManager(this);
         new Metrics(this, 24171);
@@ -84,6 +87,7 @@ public final class DeathPunish extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EatCustomItemListener(customItemService), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(customItemService), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
+        getServer().getOnlinePlayers().forEach(maxHealthModifierService::syncPlayer);
 
         var deathPunishCommand = new DeathPunishCommand(this, customItemService);
         Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setExecutor(deathPunishCommand);
@@ -94,6 +98,9 @@ public final class DeathPunish extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (maxHealthModifierService != null) {
+            getServer().getOnlinePlayers().forEach(maxHealthModifierService::clearModifier);
+        }
         if (messageService != null) messageService.info("插件已禁用");
     }
 
@@ -136,9 +143,7 @@ public final class DeathPunish extends JavaPlugin {
             residence = Residence.getInstance();
         }
 
-        messageService.info("\n=================================\n");
-        messageService.info("已启用依赖：\n" + (enableEco ? "Vault \n" : "") + (enableWorldGuard ? "WorldGuard \n" : "") + (enableResidence ? "Residence \n" : ""));
-        messageService.info("\n=================================\n");
+        messageService.info("\n=================================\n已启用依赖：\n" + (enableEco ? "Vault \n" : "") + (enableWorldGuard ? "WorldGuard \n" : "") + (enableResidence ? "Residence \n" : "") + "\n=================================\n");
     }
 
     public static Economy getEconomy() {
@@ -216,7 +221,7 @@ public final class DeathPunish extends JavaPlugin {
     }
 
     private static String normalizeVersion(String version) {
-        return version.replaceFirst("^[vV]", "");
+        return version.replaceFirst("^[vV]", "").split("[-+]")[0];
     }
 
 }
