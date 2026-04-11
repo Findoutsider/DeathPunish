@@ -10,17 +10,15 @@ import com.deathPunish.service.CustomItemService;
 import com.deathPunish.service.MaxHealthModifierService;
 import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PunishmentService;
+import com.deathPunish.service.SoftDependencyContext;
 import com.deathPunish.utils.LoggerUtils;
 import com.deathPunish.utils.Metrics;
 import com.deathPunish.utils.SchedulerUtils;
 import com.deathPunish.utils.manager.WorldManager;
-import com.sk89q.worldguard.WorldGuard;
 import com.deathPunish.commands.DeathPunishCommand;
 import com.tcoded.folialib.FoliaLib;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.json.simple.JSONObject;
@@ -45,17 +43,11 @@ public final class DeathPunish extends JavaPlugin {
     private MaxHealthModifierService maxHealthModifierService;
     private PunishmentService punishmentService;
     private MessageService messageService;
+    private SoftDependencyContext softDependencyContext;
 
     public static volatile String latestVersion;
     public static volatile boolean updateAvailable;
 
-    public static Economy econ = null;
-    public static WorldGuard worldGuard = null;
-    public static Residence residence = null;
-
-    public static boolean enableEco = false;
-    public static boolean enableWorldGuard = false;
-    public static boolean enableResidence = false;
     public ShapedRecipe enchantedGoldenAppleRecipe;
 
     public static FoliaLib getFoliaLib() { return foliaLib; }
@@ -65,6 +57,7 @@ public final class DeathPunish extends JavaPlugin {
     public MaxHealthModifierService getMaxHealthModifierService() { return maxHealthModifierService; }
     public PunishmentService getPunishmentService() { return punishmentService; }
     public MessageService getMessageService() { return messageService; }
+    public SoftDependencyContext getSoftDependencyContext() { return softDependencyContext; }
     public String getPluginVersion() { return getDescription().getVersion(); }
 
     @Override
@@ -74,13 +67,19 @@ public final class DeathPunish extends JavaPlugin {
         saveDefaultConfig();
         reloadConfig();
         refreshConfigState();
+        softDependencyContext = setupSoftDependency();
         maxHealthModifierService = new MaxHealthModifierService(this);
         customItemService = new CustomItemService(this);
-        punishmentService = new PunishmentService(this, customItemService, messageService, maxHealthModifierService);
+        punishmentService = new PunishmentService(
+                this,
+                customItemService,
+                messageService,
+                softDependencyContext.createPluginRegionMatcher(messageService),
+                maxHealthModifierService
+        );
         foliaLib = new FoliaLib(this);
         worldManager = new WorldManager(this);
         new Metrics(this, 24171);
-        setupSoftDependency();
         registerCustomRecipes();
 
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(punishmentService), this);
@@ -124,30 +123,8 @@ public final class DeathPunish extends JavaPlugin {
         }
     }
 
-    private void setupSoftDependency() {
-        if (getServer().getPluginManager().getPlugin("Vault") != null) {
-            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-            if (rsp != null) {
-                econ = rsp.getProvider();
-                enableEco = true;
-            }
-        }
-            
-        if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
-            enableWorldGuard = true;
-            worldGuard = WorldGuard.getInstance();
-        }
-
-        if (getServer().getPluginManager().getPlugin("Residence") != null) {
-            enableResidence = true;
-            residence = Residence.getInstance();
-        }
-
-        messageService.info("\n=================================\n\n已启用依赖：\n" + (enableEco ? "Vault \n" : "") + (enableWorldGuard ? "WorldGuard \n" : "") + (enableResidence ? "Residence \n" : "") + "\n=================================\n");
-    }
-
-    public static Economy getEconomy() {
-        return econ;
+    private SoftDependencyContext setupSoftDependency() {
+        return SoftDependencyContext.initialize(this, messageService);
     }
 
     private void checkForUpdates() {

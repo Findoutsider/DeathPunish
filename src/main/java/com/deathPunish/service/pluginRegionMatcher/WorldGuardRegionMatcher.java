@@ -1,10 +1,10 @@
 package com.deathPunish.service.pluginRegionMatcher;
 
-import com.deathPunish.DeathPunish;
 import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PluginRegionMatcher;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -14,18 +14,18 @@ import org.bukkit.Location;
 
 import java.util.List;
 
-import static com.deathPunish.DeathPunish.worldGuard;
-
-public class WorldGuardPluginRegionMatcher implements PluginRegionMatcher {
+public class WorldGuardRegionMatcher implements PluginRegionMatcher {
     private final MessageService messageService;
+    private final WorldGuard worldGuard;
 
-    public WorldGuardPluginRegionMatcher(MessageService messageService) {
+    public WorldGuardRegionMatcher(MessageService messageService, WorldGuard worldGuard) {
         this.messageService = messageService;
+        this.worldGuard = worldGuard;
     }
 
     @Override
     public boolean matches(Location location, List<String> configuredRegions) {
-        if (!DeathPunish.enableWorldGuard || configuredRegions.isEmpty() || location.getWorld() == null) {
+        if (worldGuard == null || configuredRegions.isEmpty() || location.getWorld() == null) {
             return false;
         }
         try {

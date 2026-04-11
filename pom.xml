@@ -85,6 +85,11 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>reposilite-repository-releases</id>
+            <name>IncrediblePlugins Repository</name>
+            <url>https://repo.incredibleplugins.com/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -132,6 +137,23 @@
             <artifactId>Residence</artifactId>
             <version>6.0.0.1</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>cn.lunadeer</groupId>
+            <artifactId>DominionAPI</artifactId>
+            <version>4.7.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.TownyAdvanced</groupId>
+            <artifactId>towny</artifactId>
+            <version>0.102.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.incredibleplugins</groupId>
+            <artifactId>lands-api</artifactId>
+            <version>7.25.11</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

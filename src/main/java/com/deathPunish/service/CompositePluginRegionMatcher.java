@@ -12,8 +12,16 @@ public class CompositePluginRegionMatcher implements PluginRegionMatcher {
         this.matchers = Arrays.asList(matchers);
     }
 
+    public CompositePluginRegionMatcher(List<PluginRegionMatcher> matchers) {
+        this.matchers = List.copyOf(matchers);
+    }
+
     @Override
     public boolean matches(Location location, List<String> configuredRegions) {
         return matchers.stream().anyMatch(matcher -> matcher.matches(location, configuredRegions));
+    }
+
+    public List<PluginRegionMatcher> matchers() {
+        return List.copyOf(matchers);
     }
 }

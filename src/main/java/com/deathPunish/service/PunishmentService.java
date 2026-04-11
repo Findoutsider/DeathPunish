@@ -2,8 +2,6 @@ package com.deathPunish.service;
 
 import com.deathPunish.DeathPunish;
 import com.deathPunish.config.PluginConfig;
-import com.deathPunish.service.pluginRegionMatcher.ResidencePluginRegionMatcher;
-import com.deathPunish.service.pluginRegionMatcher.WorldGuardPluginRegionMatcher;
 import com.deathPunish.utils.EpitaphUtils;
 import com.deathPunish.utils.SchedulerUtils;
 import org.bukkit.BanList;
@@ -41,29 +39,11 @@ public class PunishmentService {
     private final Map<UUID, PendingPunishment> pendingPunishments = new ConcurrentHashMap<>();
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService) {
-        this(
-                plugin,
-                customItemService,
-                messageService,
-                new CompositePluginRegionMatcher(
-                        new WorldGuardPluginRegionMatcher(messageService),
-                        new ResidencePluginRegionMatcher(messageService)
-                ),
-                plugin.getMaxHealthModifierService()
-        );
+        this(plugin, customItemService, messageService, plugin.getSoftDependencyContext().createPluginRegionMatcher(messageService), plugin.getMaxHealthModifierService());
     }
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, MaxHealthModifierService maxHealthModifierService) {
-        this(
-                plugin,
-                customItemService,
-                messageService,
-                new CompositePluginRegionMatcher(
-                        new WorldGuardPluginRegionMatcher(messageService),
-                        new ResidencePluginRegionMatcher(messageService)
-                ),
-                maxHealthModifierService
-        );
+        this(plugin, customItemService, messageService, plugin.getSoftDependencyContext().createPluginRegionMatcher(messageService), maxHealthModifierService);
     }
 
     public PunishmentService(DeathPunish plugin, CustomItemService customItemService, MessageService messageService, PluginRegionMatcher pluginRegionMatcher, MaxHealthModifierService maxHealthModifierService) {
@@ -262,14 +242,15 @@ public class PunishmentService {
     }
 
     private void reduceMoney(Player player, PluginConfig pluginConfig) {
-        if (!DeathPunish.enableEco || DeathPunish.econ == null) {
+        var softDependencyContext = plugin.getSoftDependencyContext();
+        if (!softDependencyContext.hasEconomy() || softDependencyContext.economy() == null) {
             messageService.warn("未启用经济系统，已跳过玩家 " + player.getName() + " 的扣费惩罚");
             return;
         }
 
         double amount;
         if (pluginConfig.reduceMoneyMode() == 1) {
-            amount = DeathPunish.econ.getBalance(player) * pluginConfig.reduceMoneyValue();
+            amount = softDependencyContext.economy().getBalance(player) * pluginConfig.reduceMoneyValue();
         } else if (pluginConfig.reduceMoneyMode() == 2 && pluginConfig.reduceMoneyValue() >= 0) {
             amount = pluginConfig.reduceMoneyValue();
         } else {
@@ -278,7 +259,7 @@ public class PunishmentService {
         }
 
         if (amount > 0) {
-            DeathPunish.econ.withdrawPlayer(player, amount);
+            softDependencyContext.economy().withdrawPlayer(player, amount);
         }
     }
 

@@ -5,22 +5,22 @@ import java.util.List;
 import org.bukkit.Location;
 
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
-import com.deathPunish.DeathPunish;
+import com.bekvon.bukkit.residence.Residence;
 import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PluginRegionMatcher;
 
-import static com.deathPunish.DeathPunish.residence;
-
-public class ResidencePluginRegionMatcher implements PluginRegionMatcher {
+public class ResidenceRegionMatcher implements PluginRegionMatcher {
     private final MessageService messageService;
+    private final Residence residence;
 
-    public ResidencePluginRegionMatcher(MessageService messageService) {
+    public ResidenceRegionMatcher(MessageService messageService, Residence residence) {
         this.messageService = messageService;
+        this.residence = residence;
     }
 
     @Override
     public boolean matches(Location location, List<String> configuredRegions) {
-        if (!DeathPunish.enableResidence || configuredRegions.isEmpty() || location.getWorld() == null) {
+        if (residence == null || configuredRegions.isEmpty() || location.getWorld() == null) {
             return false;
         }
         try { 
