@@ -105,6 +105,7 @@ punishments:
 - `/deathpunish set`
 - `/deathpunish add`
 - `/deathpunish get`
+- `/deathpunish migrate <玩家>`
 
 别名：
 
@@ -130,4 +131,8 @@ punishments:
 - 如果未安装 Vault，金钱惩罚不会生效。
 - 如果未安装 WorldGuard，当前的 `plugin_region` 区域规则不会生效。
 - 如果未配置跳过提示消息，会自动使用 `skipPunishMsg`。
+- 从 `1.5.0-SNAPSHOT` 起，DeathPunish 改为使用 `AttributeModifier` 管理自身造成的生命上限变化，以提高与其他会修改生命值的插件的兼容性。
+- 如果你从旧版本升级，且旧版本曾直接修改过玩家的 `GENERIC_MAX_HEALTH.baseValue`，建议对受影响玩家执行 `/deathpunish migrate <玩家>`。
+- `migrate` 会将玩家当前最大生命的 `baseValue` 重置为 `20`，并把差值迁移为 DeathPunish 自己的 modifier。
+- `migrate` 只建议用于修复旧版本遗留数据。若服务器中有其他插件主动修改 `baseValue` 且不是以 `20` 为基线，请先确认再执行。
 - 本版本为 `1.5.0-SNAPSHOT`，功能仍在继续补充和调整。
