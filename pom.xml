@@ -151,9 +151,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.incredibleplugins</groupId>
-            <artifactId>lands-api</artifactId>
-            <version>7.25.11</version>
+            <groupId>com.github.angeschossen</groupId>
+            <artifactId>LandsAPI</artifactId>
+            <version>7.25.4</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

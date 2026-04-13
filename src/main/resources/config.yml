@@ -111,6 +111,12 @@ killSteal:
     enable: false
     rate: 0.5 # 偷取的经验值占玩家失去的等级的比例
 
+customItemManager:
+  healItem:
+    disableBuiltin: false
+  protectItem:
+    disableBuiltin: false
+
 
 customItems:
   # 开启后可以使用其他插件来自定义配方

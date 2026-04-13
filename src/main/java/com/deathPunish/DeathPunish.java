@@ -1,12 +1,12 @@
 package com.deathPunish;
 
 import com.deathPunish.config.PluginConfig;
-import com.bekvon.bukkit.residence.Residence;
 import com.deathPunish.Listener.EatCustomItemListener;
 import com.deathPunish.Listener.PlayerDeathListener;
 import com.deathPunish.Listener.PlayerInteractListener;
 import com.deathPunish.Listener.PlayerJoinListener;
 import com.deathPunish.service.CustomItemService;
+import com.deathPunish.service.ManagedItemService;
 import com.deathPunish.service.MaxHealthModifierService;
 import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PunishmentService;
@@ -40,6 +40,7 @@ public final class DeathPunish extends JavaPlugin {
     public static LoggerUtils log;
     private PluginConfig pluginConfig;
     private CustomItemService customItemService;
+    private ManagedItemService managedItemService;
     private MaxHealthModifierService maxHealthModifierService;
     private PunishmentService punishmentService;
     private MessageService messageService;
@@ -54,6 +55,7 @@ public final class DeathPunish extends JavaPlugin {
     public static WorldManager getWorldManger() { return worldManager; }
     public PluginConfig getPluginConfig() { return pluginConfig; }
     public CustomItemService getCustomItemService() { return customItemService; }
+    public ManagedItemService getManagedItemService() { return managedItemService; }
     public MaxHealthModifierService getMaxHealthModifierService() { return maxHealthModifierService; }
     public PunishmentService getPunishmentService() { return punishmentService; }
     public MessageService getMessageService() { return messageService; }
@@ -67,6 +69,8 @@ public final class DeathPunish extends JavaPlugin {
         saveDefaultConfig();
         reloadConfig();
         refreshConfigState();
+        managedItemService = new ManagedItemService(new java.io.File(getDataFolder(), "items.yml"));
+        managedItemService.load();
         softDependencyContext = setupSoftDependency();
         maxHealthModifierService = new MaxHealthModifierService(this);
         customItemService = new CustomItemService(this);
@@ -88,7 +92,7 @@ public final class DeathPunish extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getOnlinePlayers().forEach(maxHealthModifierService::syncPlayer);
 
-        var deathPunishCommand = new DeathPunishCommand(this, customItemService);
+        var deathPunishCommand = new DeathPunishCommand(this, customItemService, managedItemService);
         Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setExecutor(deathPunishCommand);
         Objects.requireNonNull(getCommand("deathpunish"), "deathpunish command not defined").setTabCompleter(deathPunishCommand);
         messageService.info("插件已启用");
@@ -104,8 +108,12 @@ public final class DeathPunish extends JavaPlugin {
     }
 
     public void registerCustomRecipes() {
+        getServer().removeRecipe(CustomItemService.HEAL_RECIPE_KEY);
+        if (pluginConfig.disableBuiltinHealItem()) {
+            enchantedGoldenAppleRecipe = null;
+            return;
+        }
         enchantedGoldenAppleRecipe = customItemService.createHealRecipe();
-        getServer().removeRecipe(enchantedGoldenAppleRecipe.getKey());
         getServer().addRecipe(enchantedGoldenAppleRecipe);
     }
 

@@ -14,6 +14,7 @@ public class ReloadSubCommand implements SubCommand {
     public boolean execute(CommandSender sender, String[] args) {
         context.plugin().reloadConfig();
         context.plugin().refreshConfigState();
+        context.managedItemService().load();
         DeathPunish.getWorldManger().setWorldRule();
         context.plugin().registerCustomRecipes();
         context.messageService().info(sender, "插件已重载");

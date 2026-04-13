@@ -109,11 +109,28 @@ punishments:
 
 不同的跳过来源可以分别设置提示消息。
 
+### 5. 内置物品与自定义物品
+
+```yml
+customItemManager:
+  healItem:
+    disableBuiltin: false
+  protectItem:
+    disableBuiltin: false
+```
+
+- `disableBuiltin: false` 时，配置文件中的内置物品和 `items.yml` 中登记的额外物品会同时生效。
+- `healItem.disableBuiltin: true` 时，禁用内置治疗物品，只保留 `items.yml` 中登记的额外治疗物品。
+- `protectItem.disableBuiltin: true` 时，禁用内置保护符和末影保护符，只保留 `items.yml` 中登记的额外保护符。
+
 ## 命令
 
 - `/deathpunish help`
 - `/deathpunish reload`
-- `/deathpunish give`
+- `/deathpunish give <玩家> <heal|protect|ender> [额外物品ID] [数量]`
+- `/deathpunish item add <heal|protect|ender> <id> ...`
+- `/deathpunish item list <heal|protect|ender>`
+- `/deathpunish item remove <heal|protect|ender> <id>`
 - `/deathpunish set`
 - `/deathpunish add`
 - `/deathpunish get`
@@ -148,6 +165,9 @@ punishments:
   - Towny
   - Dominion
 - 如果未配置跳过提示消息，会自动使用 `skipPunishMsg`。
+- `give` 不带额外物品 ID 时发放内置物品；若对应类型已将 `disableBuiltin` 设为 `true`，则必须指定额外物品 ID。
+- `item add` 只会把当前主手物品登记到 `items.yml`，不会改写 `config.yml` 中的内置物品。
+- 建议先用 `item add` 和 `item list` 确认额外物品正常，再把对应 `disableBuiltin` 设为 `true`。
 - 从 `1.5.0-SNAPSHOT` 起，DeathPunish 改为使用 `AttributeModifier` 管理自身造成的生命上限变化，以提高与其他会修改生命值的插件的兼容性。
 - 如果你从旧版本升级，且旧版本曾直接修改过玩家的 `GENERIC_MAX_HEALTH.baseValue`，建议对受影响玩家执行 `/deathpunish migrate <玩家>`。
 - `migrate` 会将玩家当前最大生命的 `baseValue` 重置为 `20`，并把差值迁移为 DeathPunish 自己的 modifier。

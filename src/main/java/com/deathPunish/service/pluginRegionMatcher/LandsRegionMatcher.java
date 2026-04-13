@@ -1,17 +1,15 @@
 package com.deathPunish.service.pluginRegionMatcher;
 
-import java.util.List;
-
-import org.bukkit.Location;
-
 import com.deathPunish.service.MessageService;
 import com.deathPunish.service.PluginRegionMatcher;
-
 import me.angeschossen.lands.api.LandsIntegration;
+import org.bukkit.Location;
+
+import java.util.List;
 
 public class LandsRegionMatcher implements PluginRegionMatcher {
-    private MessageService messageService;
-    private LandsIntegration lands;
+    private final MessageService messageService;
+    private final LandsIntegration lands;
 
     public LandsRegionMatcher(MessageService messageService, LandsIntegration lands) {
         this.messageService = messageService;
@@ -24,9 +22,16 @@ public class LandsRegionMatcher implements PluginRegionMatcher {
             return false;
         }
         try {
-            String regionName = lands.getArea(location).getName();
+            var area = lands.getArea(location);
+            if (area == null) {
+                return false;
+            }
+            String regionName = area.getName();
+            if (regionName == null) {
+                return false;
+            }
             for (String configuredRegion : configuredRegions) {
-                if (regionName != null && regionName.equalsIgnoreCase(configuredRegion)) {
+                if (regionName.equalsIgnoreCase(configuredRegion)) {
                     return true;
                 }
             }

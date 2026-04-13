@@ -23,8 +23,7 @@ public class PlayerInteractListener implements Listener {
         if (!ACTIONS.contains(event.getAction()) || event.getItem() == null) {
             return;
         }
-        if (customItemService.matchesConfiguredItem(event.getItem(), CustomItemService.PROTECT_ITEM_PATH)
-                || customItemService.matchesConfiguredItem(event.getItem(), CustomItemService.ENDER_PROTECT_ITEM_PATH)) {
+        if (customItemService.shouldBlockProtectItemInteraction(event.getItem())) {
             event.setCancelled(true);
         }
     }

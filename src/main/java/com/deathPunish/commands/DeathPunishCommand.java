@@ -2,6 +2,7 @@ package com.deathPunish.commands;
 
 import com.deathPunish.DeathPunish;
 import com.deathPunish.service.CustomItemService;
+import com.deathPunish.service.ManagedItemService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,11 +18,12 @@ public class DeathPunishCommand implements CommandExecutor, TabExecutor {
     private final SubCommand helpSubCommand;
     private final Map<String, SubCommand> subCommands = new LinkedHashMap<>();
 
-    public DeathPunishCommand(DeathPunish plugin, CustomItemService customItemService) {
-        var context = new CommandContext(plugin, customItemService, plugin.getMessageService());
+    public DeathPunishCommand(DeathPunish plugin, CustomItemService customItemService, ManagedItemService managedItemService) {
+        var context = new CommandContext(plugin, customItemService, managedItemService, plugin.getMessageService());
         this.helpSubCommand = new HelpSubCommand(context);
         subCommands.put("help", helpSubCommand);
         subCommands.put("give", new GiveSubCommand(context));
+        subCommands.put("item", new ItemSubCommand(context));
         subCommands.put("set", new HealthSubCommand(context, HealthSubCommand.Mode.SET));
         subCommands.put("add", new HealthSubCommand(context, HealthSubCommand.Mode.ADD));
         subCommands.put("get", new HealthSubCommand(context, HealthSubCommand.Mode.GET));

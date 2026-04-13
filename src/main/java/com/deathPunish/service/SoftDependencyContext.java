@@ -1,20 +1,17 @@
 package com.deathPunish.service;
 
+import cn.lunadeer.dominion.api.DominionAPI;
 import com.bekvon.bukkit.residence.Residence;
 import com.deathPunish.DeathPunish;
-import com.deathPunish.service.pluginRegionMatcher.ResidenceRegionMatcher;
-import com.deathPunish.service.pluginRegionMatcher.WorldGuardRegionMatcher;
 import com.deathPunish.service.pluginRegionMatcher.DominionRegionMatcher;
-import com.deathPunish.service.pluginRegionMatcher.TownyRegionMatcher;
 import com.deathPunish.service.pluginRegionMatcher.LandsRegionMatcher;
+import com.deathPunish.service.pluginRegionMatcher.ResidenceRegionMatcher;
+import com.deathPunish.service.pluginRegionMatcher.TownyRegionMatcher;
+import com.deathPunish.service.pluginRegionMatcher.WorldGuardRegionMatcher;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.sk89q.worldguard.WorldGuard;
-
-import cn.lunadeer.dominion.api.DominionAPI;
 import me.angeschossen.lands.api.LandsIntegration;
 import net.milkbowl.vault.economy.Economy;
-
-import org.antlr.v4.parse.ANTLRParser.prequelConstruct_return;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
@@ -27,7 +24,6 @@ public class SoftDependencyContext {
     private final DominionAPI dominionAPI;
     private final TownyAPI townyAPI;
     private final LandsIntegration landsIntegration;
-
 
     public SoftDependencyContext(Economy economy, WorldGuard worldGuard, Residence residence, DominionAPI dominionAPI, TownyAPI townyAPI, LandsIntegration landsIntegration) {
         this.economy = economy;
@@ -46,8 +42,24 @@ public class SoftDependencyContext {
         Residence residence = plugin.getServer().getPluginManager().getPlugin("Residence") != null
                 ? Residence.getInstance()
                 : null;
+        DominionAPI dominionAPI = plugin.getServer().getPluginManager().getPlugin("Dominion") != null
+                ? DominionAPI.getInstance()
+                : null;
+        TownyAPI townyAPI = plugin.getServer().getPluginManager().getPlugin("Towny") != null
+                ? TownyAPI.getInstance()
+                : null;
+        LandsIntegration landsIntegration = plugin.getServer().getPluginManager().getPlugin("Lands") != null
+                ? LandsIntegration.of(plugin)
+                : null;
 
-        SoftDependencyContext context = new SoftDependencyContext(economy, worldGuard, residence, DominionAPI.getInstance(), TownyAPI.getInstance(), LandsIntegration.of(plugin));
+        SoftDependencyContext context = new SoftDependencyContext(
+                economy,
+                worldGuard,
+                residence,
+                dominionAPI,
+                townyAPI,
+                landsIntegration
+        );
         context.logEnabledDependencies(messageService);
         return context;
     }
@@ -108,15 +120,12 @@ public class SoftDependencyContext {
         if (hasResidence()) {
             matchers.add(new ResidenceRegionMatcher(messageService, residence));
         }
-
         if (hasDominion()) {
             matchers.add(new DominionRegionMatcher(messageService, dominionAPI));
         }
-
         if (hasTowny()) {
             matchers.add(new TownyRegionMatcher(messageService, townyAPI));
         }
-
         if (hasLands()) {
             matchers.add(new LandsRegionMatcher(messageService, landsIntegration));
         }

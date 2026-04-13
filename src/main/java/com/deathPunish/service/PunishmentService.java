@@ -2,6 +2,7 @@ package com.deathPunish.service;
 
 import com.deathPunish.DeathPunish;
 import com.deathPunish.config.PluginConfig;
+import com.deathPunish.model.ManagedProtectItem;
 import com.deathPunish.utils.EpitaphUtils;
 import com.deathPunish.utils.SchedulerUtils;
 import org.bukkit.BanList;
@@ -264,14 +265,14 @@ public class PunishmentService {
     }
 
     private boolean consumeProtectionItem(Player player, PluginConfig pluginConfig) {
-        return consumeConfiguredItem(player.getInventory(), CustomItemService.PROTECT_ITEM_PATH, player, "保护符", pluginConfig)
-                || consumeConfiguredItem(player.getEnderChest(), CustomItemService.ENDER_PROTECT_ITEM_PATH, player, "末影保护符", pluginConfig);
+        return consumeProtectItem(player.getInventory(), ManagedProtectItem.ProtectType.NORMAL, player, "保护符", pluginConfig)
+                || consumeProtectItem(player.getEnderChest(), ManagedProtectItem.ProtectType.ENDER, player, "末影保护符", pluginConfig);
     }
 
-    private boolean consumeConfiguredItem(Inventory inventory, String configPath, Player player, String itemName, PluginConfig pluginConfig) {
+    private boolean consumeProtectItem(Inventory inventory, ManagedProtectItem.ProtectType type, Player player, String itemName, PluginConfig pluginConfig) {
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             ItemStack item = inventory.getItem(slot);
-            if (!customItemService.matchesConfiguredItem(item, configPath)) {
+            if (!customItemService.matchesProtectItem(item, type)) {
                 continue;
             }
             if (item.getAmount() > 1) {
@@ -279,19 +280,17 @@ public class PunishmentService {
             } else {
                 inventory.setItem(slot, null);
             }
-            player.sendMessage(Objects.requireNonNull(resolveSkipPunishMessage(configPath, pluginConfig)));
+            player.sendMessage(Objects.requireNonNull(resolveSkipPunishMessage(type, pluginConfig)));
             messageService.info("玩家 " + player.getName() + " 因为 " + itemName + " 跳过死亡惩罚");
             return true;
         }
         return false;
     }
 
-    private String resolveSkipPunishMessage(String configPath, PluginConfig pluginConfig) {
-        return switch (configPath) {
-            case CustomItemService.PROTECT_ITEM_PATH -> pluginConfig.protectItemMsg();
-            case CustomItemService.ENDER_PROTECT_ITEM_PATH -> pluginConfig.enderProtectItemMsg();
-            default -> pluginConfig.skipPunishMsg();
-        };
+    private String resolveSkipPunishMessage(ManagedProtectItem.ProtectType type, PluginConfig pluginConfig) {
+        return type == ManagedProtectItem.ProtectType.ENDER
+                ? pluginConfig.enderProtectItemMsg()
+                : pluginConfig.protectItemMsg();
     }
 
     private void createEpitaph(Player player, PluginConfig pluginConfig) {

@@ -9,6 +9,7 @@ public record PluginConfig(
         String version,
         boolean enableDeathPunish,
         String punishMode,
+        CustomItemManagerConfig customItemManager,
         boolean autoSetRule,
         boolean doImmediateRespawn,
         boolean reduceMaxHealthOnDeath,
@@ -52,6 +53,10 @@ public record PluginConfig(
                 config.getString("version", ""),
                 config.getBoolean("punishOnDeath.enable"),
                 config.getString("punishOnDeath.mode", "blacklist").toLowerCase(),
+                new CustomItemManagerConfig(
+                        new ToggleConfig(config.getBoolean("customItemManager.healItem.disableBuiltin", false)),
+                        new ToggleConfig(config.getBoolean("customItemManager.protectItem.disableBuiltin", false))
+                ),
                 config.getBoolean("autoSetRule"),
                 config.getBoolean("doImmediateRespawn"),
                 config.getBoolean("punishments.reduceMaxHealthOnDeath"),
@@ -92,6 +97,14 @@ public record PluginConfig(
         );
     }
 
+    public boolean disableBuiltinHealItem() {
+        return customItemManager.healItem().disableBuiltin();
+    }
+
+    public boolean disableBuiltinProtectItems() {
+        return customItemManager.protectItem().disableBuiltin();
+    }
+
     private static double resolveMinHealthAfterDeath(FileConfiguration config) {
         return config.contains("punishments.minHealth")
                 ? config.getDouble("punishments.minHealth")
@@ -107,6 +120,13 @@ public record PluginConfig(
             );
         }
     }
+
+    public record CustomItemManagerConfig(
+            ToggleConfig healItem,
+            ToggleConfig protectItem
+    ) {}
+
+    public record ToggleConfig(boolean disableBuiltin) {}
 
     public record HealItemConfig(
             String name,
